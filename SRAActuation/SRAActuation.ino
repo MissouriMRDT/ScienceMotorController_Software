@@ -46,17 +46,18 @@ void loop()
 {
   checkButtons();
   readRoveComm();
-  //checkLS();
-  //moveToPos();
-  //adjustX();
+  moveToPos();
+  adjustX();
+  checkLS();
   writeSpeeds();
-  //sendStates();
+  sendStates();
+  delay(10);
 }
 
 void readRoveComm()
 {
   rovecomm_packet packet = RoveComm.read();
-
+  if(packet.data_id) Serial.println(packet.data_id);
   switch(packet.data_id)
   {
     case RC_SRAACTUATION_VERTICALOPENLOOP_DATAID:
@@ -64,7 +65,7 @@ void readRoveComm()
       if(packet.data[0] != 0) do_to_pos_z = false;
       
       z_speed = packet.data[0];
-
+      //Serial.print("..."); Serial.println(z_speed);
       clearWatchdog();
       break;
     }
@@ -86,25 +87,28 @@ void readRoveComm()
 
 void checkButtons()
 {
-  z_speed =  digitalRead(SPECTZ_PB) * digitalRead(SPECTZ_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-  if(digitalRead(SPECTZ_PB))
+  if(watchdog_triggered)
   {
-    do_to_pos_z = false;
+    z_speed =  digitalRead(SPECTZ_PB) * digitalRead(SPECTZ_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
+    if(digitalRead(SPECTZ_PB))
+    {
+      do_to_pos_z = false;
+    }
+    
+    x_speed =  digitalRead(SPECTX_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
+    y_speed =  digitalRead(SPECTY_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
   }
-  
-  x_speed =  digitalRead(SPECTX_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-  y_speed =  digitalRead(SPECTY_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
 }
 
 void checkLS()
 {
-  /*if(!digitalRead(SPECTZ_LOW_LS))
+  if(!digitalRead(SPECTZ_LOW_LS))
   {
     ls_pressed = 0;
     if(z_speed<0) z_speed = 0;
     current_position = 0;
   }
-  else */if(!digitalRead(SPECTZ_MID_LS))
+  else if(!digitalRead(SPECTZ_MID_LS))
   {
     ls_pressed = 1;
     current_position = 1;
@@ -158,18 +162,10 @@ void moveToPos()
 void writeSpeeds()
 {
   //Serial.println("Speed"); Serial.println(z_speed); Serial.println(x_speed); Serial.println(y_speed);
-  if(!watchdog_triggered)
-  {
-    Spectz.drive(z_speed);
-    Specty.drive(y_speed);
-    Spectx.drive(x_speed);
-  }
-  else
-  {
-    Spectz.brake(500);
-    Specty.brake(500);
-    Spectx.brake(500);
-  } 
+  //Serial.println(z_speed);
+  Spectz.drive(z_speed);
+  Specty.drive(y_speed);
+  Spectx.drive(x_speed);
 }
 
 void sendStates()
@@ -197,6 +193,9 @@ void adjustX()
 void watchdogTriggered()
 {
   Serial.println("Watchdog Triggered");
+  z_speed = 0;
+  x_speed = 0;
+  y_speed = 0;
   watchdog_triggered = true;
   digitalWrite(SW_ERR, HIGH);
 }
