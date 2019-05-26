@@ -2,6 +2,10 @@
 #include "RoveStmVnhPwm.h"
 #include "SRAActuation.h"
 
+#include "RoveWatchdog.h"
+
+RoveWatchdog        Watchdog;
+
 void setup()
 {
   Serial.begin(115200);
@@ -15,6 +19,14 @@ void setup()
   pinMode(SPECTY_PB, INPUT);
   pinMode(DIR_SW, INPUT);
 
+  pinMode(SW_IND1, OUTPUT);
+  pinMode(SW_IND2, OUTPUT);
+  pinMode(SW_ERR, OUTPUT);
+
+  digitalWrite(SW_IND1, LOW);
+  digitalWrite(SW_IND2, LOW);
+  digitalWrite(SW_ERR, LOW);
+
   pinMode(SPECTZ_UPP_LS, INPUT);
   pinMode(SPECTZ_MID_LS, INPUT);
   pinMode(SPECTZ_LOW_LS, INPUT);
@@ -25,18 +37,20 @@ void setup()
   Spectx.attach(SPECTX_HEADER);
   Specty.attach(SPECTY_HEADER);
 
-  
+  Watchdog.attach(watchdogTriggered); 
+  Watchdog.start(1000, 99999);
+  delay(1);
 }
 
 void loop()
 {
-  readRoveComm();
   checkButtons();
-  checkLS();
-  moveToPos();
-  adjustX();
+  readRoveComm();
+  //checkLS();
+  //moveToPos();
+  //adjustX();
   writeSpeeds();
-  sendStates();
+  //sendStates();
 }
 
 void readRoveComm()
@@ -48,7 +62,10 @@ void readRoveComm()
     case RC_SRAACTUATION_VERTICALOPENLOOP_DATAID:
     {
       if(packet.data[0] != 0) do_to_pos_z = false;
+      
       z_speed = packet.data[0];
+
+      clearWatchdog();
       break;
     }
     case RC_SRAACTUATION_VERTICALTOPOSITION_DATAID:
@@ -61,6 +78,7 @@ void readRoveComm()
     {
       x_speed = packet.data[0];
       y_speed = packet.data[1];
+      clearWatchdog();
       break;
     }
   }
@@ -68,19 +86,14 @@ void readRoveComm()
 
 void checkButtons()
 {
+  z_speed =  digitalRead(SPECTZ_PB) * digitalRead(SPECTZ_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
   if(digitalRead(SPECTZ_PB))
   {
-    z_speed =  BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-    in_to_pos = false;
+    do_to_pos_z = false;
   }
-  if(digitalRead(SPECTX_PB))
-  {
-    x_speed =  BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-  }
-  if(digitalRead(SPECTY_PB))
-  {
-    y_speed =  BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-  }
+  
+  x_speed =  digitalRead(SPECTX_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
+  y_speed =  digitalRead(SPECTY_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
 }
 
 void checkLS()
@@ -145,10 +158,18 @@ void moveToPos()
 void writeSpeeds()
 {
   //Serial.println("Speed"); Serial.println(z_speed); Serial.println(x_speed); Serial.println(y_speed);
-  
-  Spectz.drive(z_speed);
-  Specty.drive(y_speed);
-  Spectx.drive(x_speed);
+  if(!watchdog_triggered)
+  {
+    Spectz.drive(z_speed);
+    Specty.drive(y_speed);
+    Spectx.drive(x_speed);
+  }
+  else
+  {
+    Spectz.brake(500);
+    Specty.brake(500);
+    Spectx.brake(500);
+  } 
 }
 
 void sendStates()
@@ -171,4 +192,18 @@ void adjustX()
       x_speed = -x_pos * 500;
     }
   }
+}
+
+void watchdogTriggered()
+{
+  Serial.println("Watchdog Triggered");
+  watchdog_triggered = true;
+  digitalWrite(SW_ERR, HIGH);
+}
+
+void clearWatchdog()
+{
+  Watchdog.clear();
+  watchdog_triggered = false;
+  digitalWrite(SW_ERR, LOW);
 }

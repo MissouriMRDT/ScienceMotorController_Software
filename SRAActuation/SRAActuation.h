@@ -41,6 +41,10 @@
 #define LS_7  PE_5
 #define LS_8  PC_6
 
+#define SW_IND1 PM_7
+#define SW_IND2 PP_5
+#define SW_ERR  PA_7
+
 #define BUTTON_SPEED 500
 
 RoveCommEthernetUdp RoveComm;
@@ -58,6 +62,8 @@ uint8_t target_position;
 uint8_t ls_pressed;
 
 bool do_to_pos_z;
+bool ignore_buttons;
+bool watchdog_triggered = false;
 
 bool x_centered;
 int x_pos;
@@ -69,5 +75,7 @@ void checkLS();
 void writeSpeeds();
 void moveToPos();
 void adjustX();
+void watchdogTriggered();
+void clearWatchdog();
 
 #endif
