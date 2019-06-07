@@ -4,6 +4,8 @@
 
 #include "RoveWatchdog.h"
 
+#define SPEED_FLOOR 500
+
 RoveWatchdog        Watchdog;
 
 void setup()
@@ -18,6 +20,7 @@ void setup()
   pinMode(SPECTX_PB, INPUT);
   pinMode(SPECTY_PB, INPUT);
   pinMode(DIR_SW, INPUT);
+  pinMode(UNUSED_PB, INPUT);
 
   pinMode(SW_IND1, OUTPUT);
   pinMode(SW_IND2, OUTPUT);
@@ -44,11 +47,21 @@ void setup()
 
 void loop()
 {
-  checkButtons();
+  Serial.print(".");
   readRoveComm();
-  moveToPos();
-  adjustX();
-  checkLS();
+  if(watchdog_triggered)
+  {
+    checkButtons();
+  }
+  else
+  {
+    //moveToPos();
+  }
+  if(do_ls)
+  {
+    adjustX();
+    checkLS();
+  }
   writeSpeeds();
   sendStates();
   delay(10);
@@ -65,43 +78,57 @@ void readRoveComm()
       if(packet.data[0] != 0) do_to_pos_z = false;
       
       z_speed = packet.data[0];
-      //Serial.print("..."); Serial.println(z_speed);
+      //if(z_speed > 0 && z_speed < SPEED_FLOOR) z_speed = 0;
+      //if(z_speed < 0 && z_speed > -SPEED_FLOOR) z_speed = 0;
+      Serial.print("..."); Serial.println(z_speed);
       clearWatchdog();
       break;
     }
     case RC_SRAACTUATION_VERTICALTOPOSITION_DATAID:
     {
       do_to_pos_z = true;
-      target_position = packet.data[0];
+      target_position = packet.data[0]  /2;
       break;
     }
     case RC_SRAACTUATION_SPECTROMETERMOVE_DATAID:
     {
-      x_speed = packet.data[0];
-      y_speed = packet.data[1];
+      x_speed = -packet.data[0];
+      y_speed = -packet.data[1]; 
+      if(x_speed >= 100) center = false;
       clearWatchdog();
       break;
+    }
+    case RC_SRAACTUATION_DOLS_DATAID:
+    {
+      do_ls = packet.data[0];
+    }
+    case RC_SRAACTUATION_CENTER_DATAID:
+    {
+      center = true;
+      Serial.println("Center");
     }
   }
 }
 
 void checkButtons()
 {
-  if(watchdog_triggered)
+  int direction = (digitalRead(UNUSED_PB)? -1 : 1);
+  Serial.print(digitalRead(UNUSED_PB));
+  z_speed =  digitalRead(SPECTZ_PB) * digitalRead(SPECTZ_PB) * BUTTON_SPEED * direction;
+  if(digitalRead(SPECTZ_PB))
   {
-    z_speed =  digitalRead(SPECTZ_PB) * digitalRead(SPECTZ_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-    if(digitalRead(SPECTZ_PB))
-    {
-      do_to_pos_z = false;
-    }
-    
-    x_speed =  digitalRead(SPECTX_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
-    y_speed =  digitalRead(SPECTY_PB) * BUTTON_SPEED * (digitalRead(DIR_SW)? 1 : -1);
+    do_to_pos_z = false;
   }
+  
+  x_speed =  digitalRead(SPECTX_PB) * BUTTON_SPEED * direction;
+  y_speed =  digitalRead(SPECTY_PB) * BUTTON_SPEED * direction;
+  //Serial.println("Speed"); Serial.println(z_speed); Serial.println(x_speed); Serial.println(y_speed);
+  
 }
 
 void checkLS()
 {
+  Serial.println("CHECKING LS");
   if(!digitalRead(SPECTZ_LOW_LS))
   {
     ls_pressed = 0;
@@ -138,6 +165,11 @@ void checkLS()
     x_pos = x_speed < 0? -1:1;
   }
   x_centered = !digitalRead(SPECTX_CENTER);
+  if(x_centered)
+  {
+    found_x_center = true;
+    center = false;
+  }
 
   //Serial.println(current_position);
 }
@@ -161,7 +193,7 @@ void moveToPos()
 
 void writeSpeeds()
 {
-  //Serial.println("Speed"); Serial.println(z_speed); Serial.println(x_speed); Serial.println(y_speed);
+  Serial.println("Speed"); Serial.println(z_speed); Serial.println(x_speed); Serial.println(y_speed);
   //Serial.println(z_speed);
   Spectz.drive(z_speed);
   Specty.drive(y_speed);
@@ -180,12 +212,20 @@ void sendStates()
 
 void adjustX()
 {
-  if(current_position >= 1)
+  if(found_x_center)
   {
-    x_speed = 0;
-    if(!x_centered)
+    if(current_position >= 1 || center)
     {
-      x_speed = -x_pos * 500;
+      x_speed = 0;
+      if(!x_centered)
+      {
+        x_speed = -x_pos * 500;
+        if(z_speed > 0) z_speed = 0;
+      }
+      else
+      {
+        center = false;
+      }
     }
   }
 }

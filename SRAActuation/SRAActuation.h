@@ -64,8 +64,11 @@ uint8_t ls_pressed;
 bool do_to_pos_z;
 bool ignore_buttons;
 bool watchdog_triggered = false;
+bool found_x_center = false;
 
 bool x_centered;
+bool do_ls = true;
+bool center;
 int x_pos;
 
 void readRoveComm();
