@@ -9,16 +9,21 @@ void setup()
   Serial.begin(115200);
 
 
-  RoveComm.begin(RC_SRAACTUATIONBOARD_FOURTHOCTET, RC_ROVECOMM_ETHERNET_SRA_ACTUATIONBOARD_PORT);
+  RoveComm.begin(RC_SRAACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
   Chem1Motor.attach(CHEM1_INA, CHEM1_INB, CHEM1_PWM);  
   Chem2Motor.attach(CHEM2_INA, CHEM2_INB, CHEM2_PWM);
   Chem3Motor.attach(CHEM3_INA, CHEM3_INB, CHEM3_PWM);
   GenevaMotor.attach(GENEVA_INA, GENEVA_INB, GENEVA_PWM); //motor 4
+
+  for(int i = 0; i < 4; i++)
+  {
+    pinMode(motorButtons[i], INPUT);
+  }
   
   //attach estop to watchdog, cut motors after 150 ms of no comms (control rate is 100ms)
   Watchdog.attach(Estop);
-  Watchdog.start(1000, 99999);
+  Watchdog.start(150);
 }
 
 void loop()
@@ -49,14 +54,40 @@ void loop()
       Watchdog.clear();
       break;
   }
+
+  for(int i = 0; i < 4; i++)
+  {
+    if(digitalRead(motorButtons[i]))
+    {
+      chemicalSpeeds[i] = 140;
+      if ( i == 4)
+        genevaSpeed[0] = 140;
+    }
+  }
+  for(int i = 0; i < 3; i++)
+  {
+    Serial.println(chemicalSpeeds[i]);
+  }
+  Serial.println(genevaSpeed[0]);
+  Chem1Motor.drive(chemicalSpeeds[0]);
+  Chem2Motor.drive(chemicalSpeeds[1]);
+  Chem3Motor.drive(chemicalSpeeds[2]); 
+  GenevaMotor.drive(genevaSpeed[0]);
 }
 
 void Estop()
 {
   Serial.println("Estop triggered");
-  Chem1Motor.drive(0);
-  Chem2Motor.drive(0);
-  Chem3Motor.drive(0);
-  GenevaMotor.drive(0);
-
+  for(int i = 0; i < 4; i++)
+  {
+    if(!digitalRead(motorButtons[i]))
+    {
+      Chem1Motor.drive(0);
+      Chem2Motor.drive(0);
+      Chem3Motor.drive(0);
+      GenevaMotor.drive(0);
+    }
+  }
+  Serial.println("Watchdog cleared");
+  Watchdog.clear();
 }
