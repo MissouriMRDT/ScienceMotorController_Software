@@ -37,7 +37,7 @@ void loop()
       genevaSpeed = (int16_t*)packet.data;
       Serial.println("Geneva Position: ");
       Serial.println(genevaSpeed[0]);
-      GenevaMotor.drive(genevaSpeed[0]);
+      geneva_Speed[0] = genevaSpeed[0];
       Watchdog.clear();
       break;
     case RC_SRAACTUATION_CHEMICALS_DATAID:
@@ -47,10 +47,10 @@ void loop()
       Serial.println(chemicalSpeeds[0]);
       Serial.println(chemicalSpeeds[1]);
       Serial.println(chemicalSpeeds[2]);
-
-      Chem1Motor.drive(chemicalSpeeds[0]);
-      Chem2Motor.drive(chemicalSpeeds[1]);
-      Chem3Motor.drive(chemicalSpeeds[2]);
+      for(uint8_t i = 0; i < 3; i++)
+      {
+        chem_Speeds[i] = chemicalSpeeds[i];
+      }
       Watchdog.clear();
       break;
   }
@@ -59,20 +59,27 @@ void loop()
   {
     if(digitalRead(motorButtons[i]))
     {
-      chemicalSpeeds[i] = 140;
-      if ( i == 4)
-        genevaSpeed[0] = 140;
+      if(i == 3)
+      {
+        geneva_Speed[i] = 140;
+      }
+      else
+      {
+        chem_Speeds[0] = 140;
+      }
+      Watchdog.clear();
     }
   }
+  
   for(int i = 0; i < 3; i++)
   {
-    Serial.println(chemicalSpeeds[i]);
+    Serial.println(chem_Speeds[i]);
   }
-  Serial.println(genevaSpeed[0]);
-  Chem1Motor.drive(chemicalSpeeds[0]);
-  Chem2Motor.drive(chemicalSpeeds[1]);
-  Chem3Motor.drive(chemicalSpeeds[2]); 
-  GenevaMotor.drive(genevaSpeed[0]);
+  Serial.println(geneva_Speed[0]);
+  Chem1Motor.drive(chem_Speeds[0]);
+  Chem2Motor.drive(chem_Speeds[1]);
+  Chem3Motor.drive(chem_Speeds[2]); 
+  GenevaMotor.drive(geneva_Speed[0]);
 }
 
 void Estop()
@@ -82,10 +89,14 @@ void Estop()
   {
     if(!digitalRead(motorButtons[i]))
     {
-      Chem1Motor.drive(0);
-      Chem2Motor.drive(0);
-      Chem3Motor.drive(0);
-      GenevaMotor.drive(0);
+      if(i == 3)
+      {
+        geneva_Speed[i] = 0;
+      }
+      else
+      {
+        chem_Speeds[0] = 0;
+      }
     }
   }
   Serial.println("Watchdog cleared");

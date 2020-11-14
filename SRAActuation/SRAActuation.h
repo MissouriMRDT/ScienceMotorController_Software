@@ -35,8 +35,8 @@ RoveStmVnhPwm Chem3Motor;
 
 RoveStmVnhPwm GenevaMotor;
 
-uint8_t chemicalSpeeds[3] = { 0, 0, 0};
-uint8_t genevaSpeed[1] = {0};
+int16_t chem_Speeds[3] = { 0, 0, 0};
+int16_t geneva_Speed[1] = {0};
 uint8_t motorButtons[4] = {CHEM1_SW, CHEM2_SW, CHEM3_SW, GENEVA_SW};
 
 RoveWatchdog  Watchdog;
