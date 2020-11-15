@@ -61,21 +61,21 @@ void loop()
     {
       if(i == 3)
       {
-        geneva_Speed[i] = 140;
+        geneva_Speed[0] = 140;
       }
       else
       {
-        chem_Speeds[0] = 140;
+        chem_Speeds[i] = 140;
       }
       Watchdog.clear();
     }
   }
   
-  for(int i = 0; i < 3; i++)
-  {
-    Serial.println(chem_Speeds[i]);
-  }
-  Serial.println(geneva_Speed[0]);
+  //for(int i = 0; i < 3; i++)
+  //{
+  //  Serial.println(chem_Speeds[i]);
+  //}
+  //Serial.println(geneva_Speed[0]);
   Chem1Motor.drive(chem_Speeds[0]);
   Chem2Motor.drive(chem_Speeds[1]);
   Chem3Motor.drive(chem_Speeds[2]); 
@@ -85,20 +85,22 @@ void loop()
 void Estop()
 {
   Serial.println("Estop triggered");
+  
   for(int i = 0; i < 4; i++)
   {
     if(!digitalRead(motorButtons[i]))
     {
       if(i == 3)
       {
-        geneva_Speed[i] = 0;
+        geneva_Speed[0] = 0;
       }
       else
       {
-        chem_Speeds[0] = 0;
+        chem_Speeds[i] = 0;
       }
     }
   }
+  
   Serial.println("Watchdog cleared");
   Watchdog.clear();
 }
