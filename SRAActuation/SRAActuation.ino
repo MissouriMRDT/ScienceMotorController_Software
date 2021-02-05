@@ -14,12 +14,14 @@ void setup()
   Chem1Motor.attach(CHEM1_INA, CHEM1_INB, CHEM1_PWM);  
   Chem2Motor.attach(CHEM2_INA, CHEM2_INB, CHEM2_PWM);
   Chem3Motor.attach(CHEM3_INA, CHEM3_INB, CHEM3_PWM);
-  GenevaMotor.attach(GENEVA_INA, GENEVA_INB, GENEVA_PWM); //motor 4
-  ElevatorMotor.attach(ELEVATOR_INA, ELEVATOR_INB, ELEVATOR_PWM);
+  GenevaMotor.attach(GENEVA_INA, GENEVA_INB, GENEVA_PWM); 
+  Z_AxisMotor.attach(Z_AXIS_INA, Z_AXIS_INB, Z_AXIS_PWM);
   GenevaEncoder.attach(GENEVA_PWM, 7);
-  ElevatorEncoder.attach(ELEVATOR_PWM, 7);
+  Z_AxisEncoder.attach(Z_AXIS_PWM, 7);
+  GenevaEncoder.start();
+  Z_AxisEncoder.start();
 
-  for(int i = 0; i < 4; i++)
+  for(int16_t i = 0; i < 4; i++)
   {
     pinMode(motorButtons[i], INPUT);
   }
@@ -31,69 +33,16 @@ void setup()
 
 void loop()
 {
-  packet = RoveComm.read();
-  //Serial.println(packet.data_id);
-  switch (packet.data_id)
-  {
-    case RC_SRAACTUATION_GENEVA_OPENLOOP_DATAID:
-      int16_t* genevaSpeed;
-      genevaSpeed = (int16_t*)packet.data;
-      Serial.println("Geneva Position: ");
-      Serial.println(genevaSpeed[0]);
-      geneva_Speed = genevaSpeed[0];
-      Watchdog.clear();
-      break;
-    case RC_SRAACTUATION_CHEMICALS_DATAID:
-      int16_t* chemicalSpeeds;
-      chemicalSpeeds = (int16_t*)packet.data;
-      Serial.println("Chemical Speeds Position: ");
-      Serial.println(chemicalSpeeds[0]);
-      Serial.println(chemicalSpeeds[1]);
-      Serial.println(chemicalSpeeds[2]);
-      for(uint8_t i = 0; i < 3; i++)
-      {
-        chem_Speeds[i] = chemicalSpeeds[i];
-      }
-      Watchdog.clear();
-      break;
-      case RC_SRAACTUATION_Z_AXIS_DATAID:
-      int16_t* elevatorSpeed;
-      elevatorSpeed = (int16_t*)packet.data;
-      Serial.println("Geneva Position: ");
-      Serial.println(elevatorSpeed[0]);
-      elevator_Speed = elevatorSpeed[0];
-      Watchdog.clear();
-      break;
-  }
-
-  for(int i = 0; i < 4; i++)
-  {
-    if(digitalRead(motorButtons[i]))
-    {
-      if(i == 3)
-      {
-        geneva_Speed = 140;
-      }
-      else
-      {
-        chem_Speeds[i] = 140;
-      }
-      Watchdog.clear();
-    }
-  }
-  
-  Chem1Motor.drive(chem_Speeds[0]);
-  Chem2Motor.drive(chem_Speeds[1]);
-  Chem3Motor.drive(chem_Speeds[2]); 
-  GenevaMotor.drive(geneva_Speed);
-  ElevatorMotor.drive(elevator_Speed);
+  ParsePackets();
+  CheckButtons();
+  DriveMotors();
 }
 
 void Estop()
 {
   Serial.println("Estop triggered");
   
-  for(int i = 0; i < 4; i++)
+  for(int16_t i = 0; i < 4; i++)
   {
     if(!digitalRead(motorButtons[i]))
     {
@@ -110,4 +59,85 @@ void Estop()
   
   Serial.println("Watchdog cleared");
   Watchdog.clear();
+}
+
+void SetMotorSpeed(int16_t Speed)
+{
+  int16_t* motorSpeed = (int16_t*)packet.data;
+  Serial.println(motorSpeed[0]);
+  Speed = motorSpeed[0];
+  Watchdog.clear();
+}
+
+void SetMotorSpeed(int16_t Speed[])
+{
+  int16_t* motorSpeed = (int16_t*)packet.data;
+  Serial.println(motorSpeed[0]);
+  Serial.println(motorSpeed[1]);
+  Serial.println(motorSpeed[2]);
+  for(uint8_t i = 0; i < 3; i++)
+  {
+    Speed[i] = motorSpeed[i];
+  }
+  Watchdog.clear();
+}
+
+void CheckButtons()
+{
+  for(int16_t i = 0; i < 4; i++)
+  {
+    if(digitalRead(motorButtons[i]))
+    {
+      if(i == 3)
+      {
+        geneva_Speed = 140;
+      }
+      else
+      {
+        chem_Speeds[i] = 140;
+      }
+      Watchdog.clear();
+    }
+  }
+}
+
+void ParsePackets()
+{
+  packet = RoveComm.read();
+  switch (packet.data_id)
+  {
+    case RC_SRAACTUATION_GENEVA_OPENLOOP_DATAID:
+      Serial.println("Geneva Position: ");
+      SetMotorSpeed(geneva_Speed);
+      break;
+
+    case RC_SRAACTUATION_CHEMICALS_DATAID:
+      Serial.println("Chemical Speeds Position: ");
+      SetMotorSpeed(chem_Speeds);
+      break;
+
+      case RC_SRAACTUATION_Z_AXIS_DATAID:
+      Serial.println("Z-Axis Position: ");
+      SetMotorSpeed(z_Axis_Speed);
+      break;
+
+      case RC_SRAACTUATION_GENEVA_TO_POS_DATAID:
+      
+      Watchdog.clear();
+      break;
+
+      case RC_SRAACTUATION_GENEVA_INC_POS_DATAID:
+      
+      Watchdog.clear();
+      break;
+  }
+}
+
+void DriveMotors()
+{
+  Chem1Motor.drive(chem_Speeds[0]);
+  Chem2Motor.drive(chem_Speeds[1]);
+  Chem3Motor.drive(chem_Speeds[2]); 
+  GenevaMotor.drive(geneva_Speed);
+  Z_AxisMotor.drive(z_Axis_Speed);
 }

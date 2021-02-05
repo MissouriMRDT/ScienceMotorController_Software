@@ -23,9 +23,14 @@
 #define GENEVA_INB   PD_5
 #define GENEVA_PWM   PG_1
 
-#define ELEVATOR_INA   PQ_0
-#define ELEVATOR_INB   PP_4
-#define ELEVATOR_PWM   PK_4
+#define Z_AXIS_INA   PQ_0
+#define Z_AXIS_INB   PP_4
+#define Z_AXIS_PWM   PK_4
+
+#define Z_UPPER _LIM PP_5
+#define Z_LOWER_LIM  PA_7
+#define GENEVA_HOME  PQ_2
+#define GENEVA_SET   PQ_3
 
 #define CHEM1_SW    PG_0
 #define CHEM2_SW    PL_4
@@ -39,14 +44,14 @@ RoveStmVnhPwm Chem1Motor;
 RoveStmVnhPwm Chem2Motor;
 RoveStmVnhPwm Chem3Motor;
 RoveStmVnhPwm GenevaMotor;
-RoveStmVnhPwm ElevatorMotor;
+RoveStmVnhPwm Z_AxisMotor;
 
 RoveUsDigiMa3Pwm GenevaEncoder;
-RoveUsDigiMa3Pwm ElevatorEncoder;
+RoveUsDigiMa3Pwm Z_AxisEncoder;
 
 int16_t chem_Speeds[3] = { 0, 0, 0};
 int16_t geneva_Speed = 0;
-int16_t elevator_Speed = 0;
+int16_t z_Axis_Speed = 0;
 uint8_t motorButtons[4] = {CHEM1_SW, CHEM2_SW, CHEM3_SW, GENEVA_SW};
 
 RoveWatchdog  Watchdog;
@@ -54,5 +59,10 @@ RoveWatchdog  Watchdog;
 rovecomm_packet packet;
 
 void Estop();
+void SetMotorSpeed(int16_t Speed);
+void SetMotorSpeed(int16_t Speed[]);
+void CheckButtons();
+void ParsePackets();
+void DriveMotors();
 
 #endif
