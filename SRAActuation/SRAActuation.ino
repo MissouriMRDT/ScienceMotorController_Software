@@ -127,7 +127,7 @@ void ParsePackets()
       break;
 
       case RC_SRAACTUATION_GENEVA_INC_POS_DATAID:
-      
+      void GenevaIncPos();
       Watchdog.clear();
       break;
   }
@@ -140,4 +140,29 @@ void DriveMotors()
   Chem3Motor.drive(chem_Speeds[2]); 
   GenevaMotor.drive(geneva_Speed);
   Z_AxisMotor.drive(z_Axis_Speed);
+}
+
+void GenevaIncPos()
+{
+  int8_t* inc = (int8_t*)packet.data;
+  if (inc[0] > 0)
+  {
+    uint16_t lastAngle = currentAngle;
+    while (currentAngle < (lastAngle + 30))
+    {
+      GenevaMotor.drive(140);
+      currentAngle = GenevaEncoder.readDegrees();
+    }
+    genevaPos++;
+  }
+  else 
+  {
+    uint16_t lastAngle = currentAngle;
+    while (currentAngle > (lastAngle - 30))
+    {
+      GenevaMotor.drive(-140);
+      currentAngle = GenevaEncoder.readDegrees();
+    }
+    genevaPos--;
+  }
 }

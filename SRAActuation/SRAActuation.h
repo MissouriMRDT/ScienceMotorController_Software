@@ -37,6 +37,18 @@
 #define CHEM3_SW    PE_1
 #define GENEVA_SW   PE_2
 
+#define TUBE_1      0
+#define TUBE_2      30
+#define TUBE_3      60
+#define TUBE_4      90
+#define TUBE_5      120
+#define TUBE_6      150
+#define TUBE_7      180
+#define TUBE_8      210
+#define TUBE_9      240
+#define TUBE_10     270
+#define TUBE_11     259
+
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_SRA_ACTUATIONBOARD_PORT);
 
@@ -53,6 +65,8 @@ int16_t chem_Speeds[3] = { 0, 0, 0};
 int16_t geneva_Speed = 0;
 int16_t z_Axis_Speed = 0;
 uint8_t motorButtons[4] = {CHEM1_SW, CHEM2_SW, CHEM3_SW, GENEVA_SW};
+uint8_t genevaPos = 0;
+uint16_t currentAngle = 0;
 
 RoveWatchdog  Watchdog;
 
@@ -64,5 +78,6 @@ void SetMotorSpeed(int16_t Speed[]);
 void CheckButtons();
 void ParsePackets();
 void DriveMotors();
+void GenevaIncPos();
 
 #endif
