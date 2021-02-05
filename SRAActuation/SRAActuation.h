@@ -47,7 +47,8 @@
 #define TUBE_8      210
 #define TUBE_9      240
 #define TUBE_10     270
-#define TUBE_11     259
+#define TUBE_11     300
+#define TUBE_12     330
 
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_SRA_ACTUATIONBOARD_PORT);
