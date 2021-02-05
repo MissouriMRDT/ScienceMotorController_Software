@@ -15,6 +15,9 @@ void setup()
   Chem2Motor.attach(CHEM2_INA, CHEM2_INB, CHEM2_PWM);
   Chem3Motor.attach(CHEM3_INA, CHEM3_INB, CHEM3_PWM);
   GenevaMotor.attach(GENEVA_INA, GENEVA_INB, GENEVA_PWM); //motor 4
+  ElevatorMotor.attach(ELEVATOR_INA, ELEVATOR_INB, ELEVATOR_PWM);
+  GenevaEncoder.attach(GENEVA_PWM, 7);
+  ElevatorEncoder.attach(ELEVATOR_PWM, 7);
 
   for(int i = 0; i < 4; i++)
   {
@@ -37,7 +40,7 @@ void loop()
       genevaSpeed = (int16_t*)packet.data;
       Serial.println("Geneva Position: ");
       Serial.println(genevaSpeed[0]);
-      geneva_Speed[0] = genevaSpeed[0];
+      geneva_Speed = genevaSpeed[0];
       Watchdog.clear();
       break;
     case RC_SRAACTUATION_CHEMICALS_DATAID:
@@ -53,6 +56,14 @@ void loop()
       }
       Watchdog.clear();
       break;
+      case RC_SRAACTUATION_Z_AXIS_DATAID:
+      int16_t* elevatorSpeed;
+      elevatorSpeed = (int16_t*)packet.data;
+      Serial.println("Geneva Position: ");
+      Serial.println(elevatorSpeed[0]);
+      elevator_Speed = elevatorSpeed[0];
+      Watchdog.clear();
+      break;
   }
 
   for(int i = 0; i < 4; i++)
@@ -61,7 +72,7 @@ void loop()
     {
       if(i == 3)
       {
-        geneva_Speed[0] = 140;
+        geneva_Speed = 140;
       }
       else
       {
@@ -71,15 +82,11 @@ void loop()
     }
   }
   
-  //for(int i = 0; i < 3; i++)
-  //{
-  //  Serial.println(chem_Speeds[i]);
-  //}
-  //Serial.println(geneva_Speed[0]);
   Chem1Motor.drive(chem_Speeds[0]);
   Chem2Motor.drive(chem_Speeds[1]);
   Chem3Motor.drive(chem_Speeds[2]); 
-  GenevaMotor.drive(geneva_Speed[0]);
+  GenevaMotor.drive(geneva_Speed);
+  ElevatorMotor.drive(elevator_Speed);
 }
 
 void Estop()
@@ -92,7 +99,7 @@ void Estop()
     {
       if(i == 3)
       {
-        geneva_Speed[0] = 0;
+        geneva_Speed = 0;
       }
       else
       {
