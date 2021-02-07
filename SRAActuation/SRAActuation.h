@@ -32,6 +32,9 @@
 #define GENEVA_HOME  PQ_2
 #define GENEVA_SET   PQ_3
 
+#define GENEVA_ENC   PM_1
+#define Z_AXIS_ENC   PM_2
+
 #define CHEM1_SW    PG_0
 #define CHEM2_SW    PL_4
 #define CHEM3_SW    PE_1
@@ -74,7 +77,7 @@ RoveWatchdog  Watchdog;
 rovecomm_packet packet;
 
 void Estop();
-void SetMotorSpeed(int16_t Speed);
+void SetMotorSpeed(int16_t& Speed);
 void SetMotorSpeed(int16_t Speed[]);
 void CheckButtons();
 void ParsePackets();

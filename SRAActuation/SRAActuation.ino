@@ -16,8 +16,8 @@ void setup()
   Chem3Motor.attach(CHEM3_INA, CHEM3_INB, CHEM3_PWM);
   GenevaMotor.attach(GENEVA_INA, GENEVA_INB, GENEVA_PWM); 
   Z_AxisMotor.attach(Z_AXIS_INA, Z_AXIS_INB, Z_AXIS_PWM);
-  GenevaEncoder.attach(GENEVA_PWM, 7);
-  Z_AxisEncoder.attach(Z_AXIS_PWM, 7);
+  GenevaEncoder.attach(GENEVA_ENC, 7);
+  Z_AxisEncoder.attach(Z_AXIS_ENC, 7);
   GenevaEncoder.start();
   Z_AxisEncoder.start();
 
@@ -61,7 +61,7 @@ void Estop()
   Watchdog.clear();
 }
 
-void SetMotorSpeed(int16_t Speed)
+void SetMotorSpeed(int16_t& Speed)
 {
   int16_t* motorSpeed = (int16_t*)packet.data;
   Serial.println(motorSpeed[0]);
@@ -127,7 +127,7 @@ void ParsePackets()
       break;
 
       case RC_SRAACTUATION_GENEVA_INC_POS_DATAID:
-      void GenevaIncPos();
+      GenevaIncPos();
       Watchdog.clear();
       break;
   }
@@ -148,7 +148,7 @@ void GenevaIncPos()
   if (inc[0] > 0)
   {
     uint16_t lastAngle = currentAngle;
-    while (currentAngle < (lastAngle + 30))
+    while ((currentAngle > (lastAngle + 32)) || (currentAngle < (lastAngle + 28)))
     {
       GenevaMotor.drive(140);
       currentAngle = GenevaEncoder.readDegrees();
@@ -158,7 +158,7 @@ void GenevaIncPos()
   else 
   {
     uint16_t lastAngle = currentAngle;
-    while (currentAngle > (lastAngle - 30))
+    while ((currentAngle < (lastAngle - 32)) || (currentAngle > (lastAngle - 28)))
     {
       GenevaMotor.drive(-140);
       currentAngle = GenevaEncoder.readDegrees();
