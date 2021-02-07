@@ -145,10 +145,11 @@ void DriveMotors()
 void GenevaIncPos()
 {
   int8_t* inc = (int8_t*)packet.data;
+  currentAngle = GenevaEncoder.readDegrees();
   if (inc[0] > 0)
   {
     uint16_t lastAngle = currentAngle;
-    while ((currentAngle > (lastAngle + 32)) || (currentAngle < (lastAngle + 28)))
+    while (currentAngle < (lastAngle + 28))
     {
       GenevaMotor.drive(140);
       currentAngle = GenevaEncoder.readDegrees();
@@ -158,7 +159,7 @@ void GenevaIncPos()
   else 
   {
     uint16_t lastAngle = currentAngle;
-    while ((currentAngle < (lastAngle - 32)) || (currentAngle > (lastAngle - 28)))
+    while (currentAngle > (lastAngle - 32))
     {
       GenevaMotor.drive(-140);
       currentAngle = GenevaEncoder.readDegrees();
