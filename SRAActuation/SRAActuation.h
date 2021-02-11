@@ -54,7 +54,7 @@
 #define TUBE_12     330
 
 RoveCommEthernet RoveComm;
-EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_SRA_ACTUATIONBOARD_PORT);
+EthernetServer TCPServer(RC_ROVECOMM_SCIENCEACTUATIONBOARD_PORT);
 
 RoveStmVnhPwm Chem1Motor;
 RoveStmVnhPwm Chem2Motor;

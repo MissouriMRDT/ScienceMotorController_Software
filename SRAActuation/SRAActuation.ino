@@ -9,7 +9,7 @@ void setup()
   Serial.begin(115200);
 
 
-  RoveComm.begin(RC_SRAACTUATIONBOARD_FOURTHOCTET, &TCPServer);
+  RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
   Chem1Motor.attach(CHEM1_INA, CHEM1_INB, CHEM1_PWM);  
   Chem2Motor.attach(CHEM2_INA, CHEM2_INB, CHEM2_PWM);
@@ -106,27 +106,27 @@ void ParsePackets()
   packet = RoveComm.read();
   switch (packet.data_id)
   {
-    case RC_SRAACTUATION_GENEVA_OPENLOOP_DATAID:
+    case RC_SCIENCEACTUATIONBOARD_GENEVAOPENLOOP_DATA_ID:
       Serial.println("Geneva Position: ");
       SetMotorSpeed(geneva_Speed);
       break;
 
-    case RC_SRAACTUATION_CHEMICALS_DATAID:
+    case RC_SCIENCEACTUATIONBOARD_CHEMICALS_DATA_ID:
       Serial.println("Chemical Speeds Position: ");
       SetMotorSpeed(chem_Speeds);
       break;
 
-      case RC_SRAACTUATION_Z_AXIS_DATAID:
+      case RC_SCIENCEACTUATIONBOARD_ZAXIS_DATA_ID:
       Serial.println("Z-Axis Position: ");
       SetMotorSpeed(z_Axis_Speed);
       break;
 
-      case RC_SRAACTUATION_GENEVA_TO_POS_DATAID:
+      case RC_SCIENCEACTUATIONBOARD_GENEVATOPOSITION_DATA_ID:
       
       Watchdog.clear();
       break;
 
-      case RC_SRAACTUATION_GENEVA_INC_POS_DATAID:
+      case RC_SCIENCEACTUATIONBOARD_GENEVAINCREMENTPOSITION_DATA_ID:
       GenevaIncPos();
       Watchdog.clear();
       break;
@@ -139,7 +139,7 @@ void DriveMotors()
   Chem2Motor.drive(chem_Speeds[1]);
   Chem3Motor.drive(chem_Speeds[2]); 
   GenevaMotor.drive(geneva_Speed);
-  Z_AxisMotor.drive(z_Axis_Speed);
+  Z_AxisMotor.drive(-z_Axis_Speed);
 }
 
 void GenevaIncPos()
