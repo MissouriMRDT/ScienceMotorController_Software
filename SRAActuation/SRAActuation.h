@@ -65,9 +65,6 @@ RoveStmVnhPwm Z_AxisMotor;
 RoveUsDigiMa3Pwm GenevaEncoder;
 RoveUsDigiMa3Pwm Z_AxisEncoder;
 
-int16_t chem_Speeds[3] = { 0, 0, 0};
-int16_t geneva_Speed = 0;
-int16_t z_Axis_Speed = 0;
 uint8_t motorButtons[4] = {CHEM1_SW, CHEM2_SW, CHEM3_SW, GENEVA_SW};
 uint8_t genevaPos = 0;
 uint16_t currentAngle = 0;
@@ -77,11 +74,6 @@ RoveWatchdog  Watchdog;
 rovecomm_packet packet;
 
 void Estop();
-void SetMotorSpeed(int16_t& Speed);
-void SetMotorSpeed(int16_t Speed[]);
-void CheckButtons();
-void ParsePackets();
-void DriveMotors();
 void GenevaIncPos();
 
 #endif
