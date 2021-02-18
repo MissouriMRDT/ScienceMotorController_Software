@@ -75,7 +75,7 @@ void loop()
             GenevaIncPos();
             Watchdog.clear();
             break;
-  }
+    }
 
     for(int16_t i = 0; i < 4; i++)
     {
