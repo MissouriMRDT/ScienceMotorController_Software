@@ -21,7 +21,7 @@ void setup()
     GenevaEncoder.start();
     Z_AxisEncoder.start();
 
-    for(int16_t i = 0; i < 4; i++)
+    for(uint8_t i = 0; i < 4; i++)
     {
         pinMode(motorButtons[i], INPUT);
     }
@@ -76,59 +76,13 @@ void loop()
             Watchdog.clear();
             break;
     }
-
-    for(int16_t i = 0; i < 4; i++)
-    {
-        if(digitalRead(motorButtons[i]))
-        {
-            if (i == 0)
-            {
-                Chem1Motor.drive(140);
-            }
-            else if (i == 1)
-            {
-                Chem2Motor.drive(140);
-            }
-            else if (i == 2)
-            {
-                Chem3Motor.drive(140); 
-            }
-            else if(i == 3)
-            {
-                GenevaMotor.drive(140);
-            }
-            Watchdog.clear();
-        }
-    }
+    CheckButtons();
+	RoveComm.write(RC_SCIENCEACTUATIONBOARD_GENEVACURRENTPOSITION_DATA_ID, RC_SCIENCEACTUATIONBOARD_GENEVACURRENTPOSITION_DATA_COUNT, genevaPos);
 }
 
 void Estop()
 {
     Serial.println("Estop triggered");
-  
-    for(int16_t i = 0; i < 4; i++)
-    {
-        if(!digitalRead(motorButtons[i]))
-        {
-            if (i == 0)
-            {
-                Chem1Motor.drive(0);
-            }
-            else if (i == 1)
-            {
-                Chem2Motor.drive(0);
-            }
-            else if (i == 2)
-            {
-                Chem3Motor.drive(0); 
-            }
-            else if(i == 3)
-            {
-                GenevaMotor.drive(0);
-            }
-        }
-    }
-  
     Serial.println("Watchdog cleared");
     Watchdog.clear();
 }
@@ -137,24 +91,50 @@ void GenevaIncPos()
 {
     int8_t* inc = (int8_t*)packet.data;
     currentAngle = GenevaEncoder.readDegrees();
+	uint16_t originalAngle = currentAngle;
     if (inc[0] > 0)
     {
-        uint16_t lastAngle = currentAngle;
-        while (currentAngle < (lastAngle + 28))
+        while ( (currentAngle < ((originalAngle + TARGET_DEGREE*inc[0] - DEGREE_TOLERANCE)%360)) && currentAngle > ((originalAngle + TARGET_DEGREE*inc[0] + DEGREE_TOLERANCE)%360) )
         {
-            GenevaMotor.drive(140);
+            GenevaMotor.drive(GENEVA_SPEED);
             currentAngle = GenevaEncoder.readDegrees();
         }
-        genevaPos++;
+        genevaPos += inc[0];
     }
     else 
     {
-        uint16_t lastAngle = currentAngle;
-        while (currentAngle > (lastAngle - 32))
+        while ( (currentAngle > ((originalAngle - TARGET_DEGREE*inc[0] + DEGREE_TOLERANCE)%360)) && currentAngle < ((originalAngle - TARGET_DEGREE*inc[0] - DEGREE_TOLERANCE)%360) )
         {
-            GenevaMotor.drive(-140);
+            GenevaMotor.drive(-GENEVA_SPEED);
             currentAngle = GenevaEncoder.readDegrees();
         }
-        genevaPos--;
+        genevaPos -= inc[0];
+    }
+}
+
+void CheckButtons()
+{
+	for(uint8_t i = 0; i < 4; i++)
+    {
+        if(digitalRead(motorButtons[i]))
+        {
+            if (i == 0)
+            {
+                Chem1Motor.drive(CHEM_SPEED);
+            }
+            else if (i == 1)
+            {
+                Chem2Motor.drive(CHEM_SPEED);
+            }
+            else if (i == 2)
+            {
+                Chem3Motor.drive(CHEM_SPEED); 
+            }
+            else if(i == 3)
+            {
+                GenevaMotor.drive(GENEVA_SPEED);
+            }
+            Watchdog.clear();
+        }
     }
 }

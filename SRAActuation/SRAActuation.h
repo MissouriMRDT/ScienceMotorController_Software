@@ -35,23 +35,16 @@
 #define GENEVA_ENC   PM_1
 #define Z_AXIS_ENC   PM_2
 
-#define CHEM1_SW    PG_0
-#define CHEM2_SW    PL_4
-#define CHEM3_SW    PE_1
-#define GENEVA_SW   PE_2
+#define CHEM1_SW     PG_0
+#define CHEM2_SW     PL_4
+#define CHEM3_SW     PE_1
+#define GENEVA_SW    PE_2
 
-#define TUBE_1      0
-#define TUBE_2      30
-#define TUBE_3      60
-#define TUBE_4      90
-#define TUBE_5      120
-#define TUBE_6      150
-#define TUBE_7      180
-#define TUBE_8      210
-#define TUBE_9      240
-#define TUBE_10     270
-#define TUBE_11     300
-#define TUBE_12     330
+#define NUM_TEST_TUBES      12
+#define TARGET_DEGREE       360/NUM_TEST_TUBES
+#define DEGREE_TOLERANCE    4
+#define GENEVA_SPEED        140
+#define CHEM_SPEED          140
 
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_SCIENCEACTUATIONBOARD_PORT);
@@ -67,7 +60,7 @@ RoveUsDigiMa3Pwm Z_AxisEncoder;
 
 uint8_t motorButtons[4] = {CHEM1_SW, CHEM2_SW, CHEM3_SW, GENEVA_SW};
 uint8_t genevaPos = 0;
-uint16_t currentAngle = 0;
+float currentAngle = 0;
 
 RoveWatchdog  Watchdog;
 
@@ -75,5 +68,6 @@ rovecomm_packet packet;
 
 void Estop();
 void GenevaIncPos();
+void CheckButtons();
 
 #endif
