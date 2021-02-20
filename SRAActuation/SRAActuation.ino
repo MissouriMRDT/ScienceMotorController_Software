@@ -68,6 +68,7 @@ void loop()
             break;
 
         case RC_SCIENCEACTUATIONBOARD_GENEVATOPOSITION_DATA_ID:
+            GenevaToPos();
             Watchdog.clear();
             break;
 
@@ -110,6 +111,23 @@ void GenevaIncPos()
         }
         genevaPos -= inc[0];
     }
+}
+
+void GenevaToPos()
+{
+  uint8_t goal_geneva_pos = ((int8_t*)packet.data)[0]; //Assuming that packet_data[0] contains the number we want
+  uint16_t goal_geneva_angle = (goal_geneva_pos-1)*TARGET_DEGREE;
+  
+  int8_t clockwise_distance = (goal_geneva_pos - genevaPos + NUM_TEST_TUBES) % NUM_TEST_TUBES;
+  int8_t counterclockwise_distance = NUM_TEST_TUBES - clockwise_distance;
+  uint8_t geneva_movement = (clockwise_distance < counterclockwise_distance ? 1 : -1)*GENEVA_SPEED; //Finds the best direction to spin
+
+  while (abs(currentAngle - goal_geneva_angle) > DEGREE_TOLERANCE)
+  {
+    GenevaMotor.drive(geneva_movement);
+    currentAngle = GenevaEncoder.readDegrees();
+  }
+  genevaPos = goal_geneva_pos;
 }
 
 void CheckButtons()

@@ -68,6 +68,7 @@ rovecomm_packet packet;
 
 void Estop();
 void GenevaIncPos();
+void GenevaToPos();
 void CheckButtons();
 
 #endif
