@@ -32,7 +32,7 @@
 #define GENEVA_HOME  PQ_2
 #define GENEVA_SET   PQ_3
 
-#define GENEVA_ENC   PM_1
+#define GENEVA_ENC   PM_4
 #define Z_AXIS_ENC   PM_2
 
 #define CHEM1_SW     PG_0
@@ -42,8 +42,8 @@
 
 #define NUM_TEST_TUBES      12
 #define TARGET_DEGREE       360/NUM_TEST_TUBES
-#define DEGREE_TOLERANCE    4
-#define GENEVA_SPEED        140
+#define DEGREE_TOLERANCE    15
+#define GENEVA_SPEED        500
 #define CHEM_SPEED          140
 
 RoveCommEthernet RoveComm;

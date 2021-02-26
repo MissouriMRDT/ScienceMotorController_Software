@@ -115,19 +115,30 @@ void GenevaIncPos()
 
 void GenevaToPos()
 {
-  uint8_t goal_geneva_pos = ((int8_t*)packet.data)[0]; //Assuming that packet_data[0] contains the number we want
-  uint16_t goal_geneva_angle = (goal_geneva_pos-1)*TARGET_DEGREE;
-  
-  int8_t clockwise_distance = (goal_geneva_pos - genevaPos + NUM_TEST_TUBES) % NUM_TEST_TUBES;
-  int8_t counterclockwise_distance = NUM_TEST_TUBES - clockwise_distance;
-  uint8_t geneva_movement = (clockwise_distance < counterclockwise_distance ? 1 : -1)*GENEVA_SPEED; //Finds the best direction to spin
+	uint8_t goal_geneva_pos = ((int8_t*)packet.data)[0]; //Assuming that packet_data[0] contains the number we want
+	uint16_t goal_geneva_angle = (goal_geneva_pos-1)*TARGET_DEGREE;
+	
+	int8_t clockwise_distance = (goal_geneva_pos - genevaPos) % 360;
+	int8_t counterclockwise_distance = 360 - clockwise_distance;
+	uint8_t shortest_distance = 0;
+	uint8_t geneva_movement;
+	if (clockwise_distance < counterclockwise_distance)
+	{
+		shortest_distance = clockwise_distance;
+	}	
+	else
+	{ 
+		shortest_distance = counterclockwise_distance;
+	}
+	uint8_t geneva_movementDirection = (clockwise_distance < counterclockwise_distance ? 1 : -1); //Finds the best direction to spin
 
-  while (abs(currentAngle - goal_geneva_angle) > DEGREE_TOLERANCE)
-  {
-    GenevaMotor.drive(geneva_movement);
-    currentAngle = GenevaEncoder.readDegrees();
-  }
-  genevaPos = goal_geneva_pos;
+	while (abs(goal_geneva_angle - currentAngle) > DEGREE_TOLERANCE)
+	{
+		Serial.println(GenevaEncoder.readDegrees());
+		GenevaMotor.drive(GENEVA_SPEED*geneva_movementDirection);
+		currentAngle = GenevaEncoder.readDegrees();
+	}
+	genevaPos = goal_geneva_pos;
 }
 
 void CheckButtons()
