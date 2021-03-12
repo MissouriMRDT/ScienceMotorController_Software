@@ -99,28 +99,35 @@ void Estop()
 
 void GenevaIncPos()
 {
-  int8_t val = 1; //REMOVE THIS
-  int8_t* inc = &val; //(int8_t*)packet.data;
-  currentAngle = GenevaEncoder.readDegrees();
-  uint16_t originalAngle = currentAngle;
-  if (inc[0] > 0)
-  {
-    while ( (currentAngle < ((originalAngle + TARGET_DEGREE * inc[0] - DEGREE_TOLERANCE) % 360)) && currentAngle > ((originalAngle + TARGET_DEGREE * inc[0] + DEGREE_TOLERANCE) % 360) )
-    {
-      GenevaMotor.drive(GENEVA_SPEED);
-      currentAngle = GenevaEncoder.readDegrees();
-    }
-    genevaPos += inc[0];
+  genevaPos = static_cast<uint8_t>(GenevaEncoder.readDegrees() / 30.0 + 1.5); //Update the absolute geneva position
+
+  int8_t geneva_inc = ((int8_t*)packet.data)[0];
+  if(abs(geneva_inc) >= NUM_TEST_TUBES){ //Input out of bounds
+    Watchdog.clear();
+    return;
   }
-  else
-  {
-    while ( (currentAngle > ((originalAngle - TARGET_DEGREE * inc[0] + DEGREE_TOLERANCE) % 360)) && currentAngle < ((originalAngle - TARGET_DEGREE * inc[0] - DEGREE_TOLERANCE) % 360) )
-    {
-      GenevaMotor.drive(-GENEVA_SPEED);
-      currentAngle = GenevaEncoder.readDegrees();
-    }
-    genevaPos -= inc[0];
+  
+  uint8_t goal_geneva_pos = genevaPos + geneva_inc + NUM_TEST_TUBES; //Goal position read in from the packet
+  if(goal_geneva_pos > NUM_TEST_TUBES){
+    goal_geneva_pos %= NUM_TEST_TUBES;
   }
+  
+  uint16_t goal_geneva_angle = (goal_geneva_pos - 1) * TARGET_DEGREE; //The angle to move to
+
+  int8_t clockwise_distance = (goal_geneva_pos - genevaPos + NUM_TEST_TUBES) % NUM_TEST_TUBES; //how far the geneva would have to turn clockwise
+  int8_t counterclockwise_distance = NUM_TEST_TUBES - clockwise_distance; // " " " counterclockwise
+  
+  int16_t geneva_movement = (clockwise_distance > counterclockwise_distance ? -1 : 1) * GENEVA_SPEED; //Finds the best direction to spin
+  
+  while(abs(currentAngle - goal_geneva_angle) > DEGREE_TOLERANCE && 360 - abs(currentAngle - goal_geneva_angle) > DEGREE_TOLERANCE)
+  {
+    GenevaMotor.drive(geneva_movement);
+    currentAngle = GenevaEncoder.readDegrees();
+  }
+  
+  GenevaMotor.drive(0);
+  genevaPos = static_cast<uint8_t>(GenevaEncoder.readDegrees() / 30.0 + 1.5); //Update the absolute geneva position
+  Watchdog.clear();
 }
 
 void GenevaToPos()
