@@ -32,8 +32,8 @@
 #define GENEVA_HOME  PQ_2
 #define GENEVA_SET   PQ_3
 
-#define GENEVA_ENC   PM_1
-#define Z_AXIS_ENC   PM_2
+#define GENEVA_ENC   PM_4
+#define Z_AXIS_ENC   PM_2 //THIS PORT WILL NOT WORK, MUST BE PB_0 or PD_6
 
 #define CHEM1_SW     PG_0
 #define CHEM2_SW     PL_4
@@ -42,8 +42,8 @@
 
 #define NUM_TEST_TUBES      12
 #define TARGET_DEGREE       360/NUM_TEST_TUBES
-#define DEGREE_TOLERANCE    4
-#define GENEVA_SPEED        140
+#define DEGREE_TOLERANCE    10
+#define GENEVA_SPEED        500
 #define CHEM_SPEED          140
 
 RoveCommEthernet RoveComm;
