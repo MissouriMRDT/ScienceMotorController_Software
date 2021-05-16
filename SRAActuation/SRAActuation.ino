@@ -94,6 +94,11 @@ void Estop()
 {
   //Serial.println("Estop triggered");
   //Serial.println("Watchdog cleared");
+  Chem1Motor.drive(0);
+  Chem2Motor.drive(0);
+  Chem3Motor.drive(0);
+  GenevaMotor.drive(0);
+  Z_AxisMotor.drive(0);
   Watchdog.clear();
 }
 
