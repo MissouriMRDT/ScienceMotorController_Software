@@ -27,7 +27,7 @@ void setup()
 
   //attach estop to watchdog, cut motors after 150 ms of no comms (control rate is 100ms)
   Watchdog.attach(Estop);
-  Watchdog.start(150);
+  Watchdog.start(250);
   
   genevaPos = static_cast<uint8_t>(GenevaEncoder.readDegrees() / 30.0 + 1.5); //Initialize the absolute geneva position
 }
@@ -92,7 +92,7 @@ void loop()
 
 void Estop()
 {
-  //Serial.println("Estop triggered");
+  Serial.println("Estop triggered");
   //Serial.println("Watchdog cleared");
   Chem1Motor.drive(0);
   Chem2Motor.drive(0);
