@@ -1,12 +1,29 @@
 #include "RoveComm.h"
 #include "RoveStmVnhPwm.h"
 #include "SRAActuation.h"
-
 #include "RoveWatchdog.h"
 
 void setup()
 {
+  BeginSerial();
+  BeginRoveComm();
+  AttachChemMotors();
+  AttachGenevaMotors();
+  InitButtons();
+  AttachWatchdog();
+  BeginWatchdog();
+}
+
+void loop()
+{
+  ParsePackets();
+  CheckButtons();
+}
+
+void BeginSerial()
+{
   Serial.begin(115200);
+}
 
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
@@ -32,7 +49,7 @@ void setup()
   genevaPos = static_cast<uint8_t>(GenevaEncoder.readDegrees() / 30.0 + 1.5); //Initialize the absolute geneva position
 }
 
-void loop()
+void ParsePackets()
 {
   packet = RoveComm.read();
   if(packet.data_id != 6){
@@ -90,7 +107,7 @@ void loop()
   RoveComm.write(RC_SCIENCEACTUATIONBOARD_GENEVACURRENTPOSITION_DATA_ID, RC_SCIENCEACTUATIONBOARD_GENEVACURRENTPOSITION_DATA_COUNT, genevaPos);
 }
 
-void Estop()
+void CheckButtonsEstop()
 {
   Serial.println("Estop triggered");
   //Serial.println("Watchdog cleared");
@@ -189,4 +206,9 @@ void CheckButtons()
       Watchdog.clear();
     }
   }
+}
+
+void WatchdogClear()
+{
+  Watchdog.clear();
 }

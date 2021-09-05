@@ -63,9 +63,24 @@ uint8_t genevaPos = 0;
 float currentAngle = 0;
 
 RoveWatchdog  Watchdog;
-
 rovecomm_packet packet;
 
+void BeginSerial();
+void BeginRoveComm();
+void AttachChemMotors();
+void AttachGenevaMotors();
+void InitButtons();
+void AttachWatchdog();
+void BeginWatchdog();
+void ParsePackets();
+void ScienceActuationBoard_GenevaOpenLoop();
+void ScienceActuationBoard_Chemicals();
+int16_t* ReceiveGenevaSpeed();
+void PrintGenevaSpeed(int16_t* genevaSpeed);
+void DriveGenevaMotor(int16_t* genevaSpeed);
+int16_t* ReceiveChemSpeeds();
+void CheckButtons();
+void CheckButtonsEstop();
 void Estop();
 void GenevaIncPos();
 void GenevaToPos();
