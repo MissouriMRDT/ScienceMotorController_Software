@@ -33,7 +33,7 @@ void loop()
       water_speeds = (int16_t*)packet.data;
       for(int i=0;i<RC_SCIENCEACTUATIONBOARD_WATER_DATA_COUNT;i++)
       {
-        Serial.println(motor_speed[i]);
+        Serial.println(water_speeds[i]);
         water[i].drive(water_speeds[i]);
       }
       break;
