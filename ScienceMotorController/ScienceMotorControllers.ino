@@ -4,13 +4,15 @@ void setup()
 {
   Serial.begin(115200);
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
-  RoveStmVnhPwm water[3] = {water_1, water_2, water_3};
   gantry_x_axis.attach(MOTOR_1_IN_A, MOTOR_1_IN_B , MOTOR_1_PWM);
   gantry_z_axis.attach(MOTOR_2_IN_A, MOTOR_2_IN_B, MOTOR_2_PWM);
   sensors_z_axis.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
   water_1.attach(MOTOR_4_IN_A, MOTOR_4_IN_B, MOTOR_4_PWM);
   water_2.attach(MOTOR_5_IN_A, MOTOR_5_IN_B, MOTOR_5_PWM);
   water_3.attach(MOTOR_6_IN_A, MOTOR_6_IN_B, MOTOR_6_PWM);
+  water[0] = water_1;
+  water[1] = water_2;
+  water[3] = water_3;
 }
 
 void loop()

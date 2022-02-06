@@ -65,6 +65,7 @@ RoveStmVnhPwm sensors_z_axis;
 RoveStmVnhPwm water_1;
 RoveStmVnhPwm water_2;
 RoveStmVnhPwm water_3;
+RoveStmVnhPwm water[3];
 
 Servo scoop;
 
