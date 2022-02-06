@@ -25,7 +25,7 @@ void loop()
     case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_DATA_ID:
       int16_t* sensor_speed;
       sensor_speed = (int16_t*)packet.data;
-      serial.println(sensor_speed[0]);
+      Serial.println(sensor_speed[0]);
       sensors_z_axis.drive(sensor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_WATER_DATA_ID:
@@ -33,26 +33,26 @@ void loop()
       water_speeds = (int16_t*)packet.data;
       for(int i=0;i<RC_SCIENCEACTUATIONBOARD_WATER_DATA_COUNT;i++)
       {
-        serial.println(motor_speed[i]);
+        Serial.println(motor_speed[i]);
         water[i].drive(water_speeds[i]);
       }
       break;
     case RC_SCIENCEACTUATIONBOARD_XOOPAXIS_DATA_ID:
       int16_t* xmotor_speed;
       xmotor_speed = (int16_t*)packet.data;
-      serial.println(xmotor_speed[0]);
+      Serial.println(xmotor_speed[0]);
       gantry_x_axis.drive(xmotor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_ZOOPAXIS_DATA_ID:
       int16_t* zmotor_speed;
       zmotor_speed = (int16_t*)packet.data;
-      serial.println(zmotor_speed[0]);
+      Serial.println(zmotor_speed[0]);
       gantry_z_axis.drive(zmotor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_SCOOPGRABBER_DATA_ID:
       int16_t* scoop_degrees;
       scoop_degrees = (int16_t*)packet.data;
-      serial.println(scoop_degrees[0]);
+      Serial.println(scoop_degrees[0]);
       scoop.write(scoop_degrees[0]);
     default:
       break;
