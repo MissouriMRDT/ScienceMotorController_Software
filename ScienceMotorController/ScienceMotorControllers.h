@@ -10,22 +10,22 @@
 // motor pin declarations
 
 #define MOTOR_1_PWM PF_1
-#define MOTOR_1_IN_A PC_6
-#define MOTOR_1_IN_B PE_5
+#define MOTOR_1_IN_A PL_0
+#define MOTOR_1_IN_B PL_1
 
 #define MOTOR_2_PWM PF_2
-#define MOTOR_2_IN_A PD_3
-#define MOTOR_2_IN_B PC_7
+#define MOTOR_2_IN_A PL_2
+#define MOTOR_2_IN_B PL_3
 
-#define MOTOR_3_PWM PF_3
-#define MOTOR_3_IN_A PB_2
-#define MOTOR_3_IN_B PB_3
+#define MOTOR_3_PWM PK_4
+#define MOTOR_3_IN_A PQ_2
+#define MOTOR_3_IN_B PQ_3
 
 // motors 4-6 are solenoids
 
 #define MOTOR_4_PWM PG_1
-#define MOTOR_4_IN_A PD_4
-#define MOTOR_4_IN_B PD_5
+#define MOTOR_4_IN_A PP_3
+#define MOTOR_4_IN_B PQ_1
 
 #define MOTOR_5_PWM PK_4
 #define MOTOR_5_IN_A PQ_0
