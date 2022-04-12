@@ -38,6 +38,7 @@ class VNHAxis{
   RoveUsDigiMa3Pwm enc;
   
   int16_t pos;
+  int32_t posEncTicks;
   int16_t vel;
   int16_t homePos;
   int16_t hiLimitPos;
@@ -81,7 +82,7 @@ class VNHAxis{
     this -> kI = kI;
     this -> kD = kD;
 
-    pos = 0;
+    posEncTicks = 0;
     cycleTime = 0;
     lastTime = 0;
 

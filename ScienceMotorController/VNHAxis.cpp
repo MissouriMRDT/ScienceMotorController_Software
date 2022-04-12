@@ -22,7 +22,7 @@ void VNHAxis::home() {
 }
 
 float VNHAxis::computePID() {
-  int16_t error = (targetPos - map(pos, 0, hiLimitPos, 0, 1000)) / 1000;
+  int16_t error = (targetPos - pos) / 1000;
   int16_t derivative = (error - lastError) / cycleTime;
   eIntegral = (abs(error) < deadZone) ? 0 : eIntegral + (error * cycleTime);
   return (kP * error) + (kI * eIntegral) - (kD * derivative);
@@ -35,7 +35,8 @@ void VNHAxis::updateInputs() {
   if(encAngle - lastEncAngle > 180000) schmovement = encAngle - lastEncAngle - 360000;
   else if(encAngle - lastEncAngle < -180000) schmovement = encAngle - lastEncAngle + 360000;
   else schmovement = encAngle - lastEncAngle;
-  pos += schmovement;
+  posEncTicks += schmovement;
+  pos = map(posEncTicks, 0, hiLimitPos, 0, 1000);
 }
 
 void VNHAxis::cycle() {
@@ -43,33 +44,58 @@ void VNHAxis::cycle() {
   lastTime = millis();
   updateInputs();
   switch(homingState) {
+    case 0: vel = computePID();
+
     case 1: {
       if(isLoLimit) {
         homingState = 2;
-        motor.brake(brakePower);
-        pos = 0;
-      } else motor.drive(-homingSpeedHi);
+        vel = 0;
+        posEncTicks = 0;
+      } else vel = -homingSpeedHi;
     }
 
     case 2: {
-      if(pos >= 360000) {
+      if(posEncTicks >= 360000) {
         homingState = 3;
-        motor.brake(brakePower);
-      }
+        vel = 0;
+      } else vel = homingSpeedHi;
+    }
+
+    case 3: {
+      if(isLoLimit) {
+        homingState = 4;
+        vel = 0;
+        posEncTicks = 0;
+      } else vel = -homingSpeedLo;
+    }
+
+    case 4: {
+      if(isHiLimit) {
+        homingState = 5;
+        vel = 0;
+        hiLimitPos = posEncTicks;
+      } else vel = homingSpeedHi;
+    }
+
+    case 5: {
+      if(posEncTicks <= hiLimitPos - 360000) {
+        homingState = 6;
+        vel = 0;
+      } else vel = -homingSpeedHi;
+    }
+
+    case 6: {
+      if(isHiLimit) {
+        homingState = 0;
+        vel = 0;
+        hiLimitPos = posEncTicks;
+      } else vel = homingSpeedLo;
     }
   }
-    motor.drive(-homingSpeedHi);
-  } else if(homingState == 1 && isLoLimit) {
-    homingState = 2;
-    motor.brake(brakePower);
-    pos = 0;
-  } else if(homingState == 2 && !isHiLimit) {
-    motor.drive(homingSpeedHi);
-  } else if(homingState ==2 && isHiLimit) {
-    homingState = 0;
-    motor.brake(brakePower);
-    hiLimitPos = pos;
-  } else if(homingState == 0) {
-    motor.drive(computePID());
-  }
+
+  if(isLoLimit && vel < 0) vel = 0;
+  if(isHiLimit && vel > 0) vel = 0;
+
+  if(vel != 0) motor.drive(vel);
+  else motor.brake(brakePower);
 }
