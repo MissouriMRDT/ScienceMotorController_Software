@@ -1,16 +1,20 @@
 #include "ScienceMotorControllers.h"
 
+Servo Scoop;
+
 void setup()
 {
   Serial.begin(115200);
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
-  gantX = new VNHAxis(MOTOR_1_IN_A, MOTOR_1_IN_B , MOTOR_1_PWM, ENC_1, LIM_SWITCH_1, LIM_SWITCH_2);
+  gantX.attach(MOTOR_1_IN_A, MOTOR_1_IN_B , MOTOR_1_PWM);
   gantZ.attach(MOTOR_2_IN_A, MOTOR_2_IN_B, MOTOR_2_PWM);
   sensZ.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
   uint8_t* tempEnc = (uint8_t*)ENC_1;
   for(int i = 0; i < 6; i ++){
     encoder[i].attach(tempEnc[i]);
   }
+  Scoop.attach(SERVO_1);
+  Scoop.write(0);
 }
 
 void loop()
@@ -55,7 +59,7 @@ void loop()
       int16_t* scoop_degrees;
       scoop_degrees = (int16_t*)packet.data;
       Serial.println(scoop_degrees[0]);
-      scoop.write(scoop_degrees[0]);
+      Scoop.write(scoop_degrees[0]);
     default:
       break;
   }

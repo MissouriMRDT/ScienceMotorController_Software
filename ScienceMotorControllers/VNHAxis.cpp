@@ -39,20 +39,25 @@ void VNHAxis::updateInputs() {
 }
 
 void VNHAxis::cycle() {
-  cycleTime = (lastTime == 0) ? 0 : millis() - lastTime;
+  /*cycleTime = (lastTime == 0) ? 0 : millis() - lastTime;
   lastTime = millis();
   updateInputs();
-  switch(homingState) {
-    case 1: {
-      if(isLoLimit) {
+  switch(homingState) 
+  {
+    case 1: 
+    {
+      if(isLoLimit) 
+      {
         homingState = 2;
         motor.brake(brakePower);
         pos = 0;
       } else motor.drive(-homingSpeedHi);
     }
 
-    case 2: {
-      if(pos >= 360000) {
+    case 2: 
+    {
+      if(pos >= 360000) 
+      {
         homingState = 3;
         motor.brake(brakePower);
       }
@@ -71,5 +76,5 @@ void VNHAxis::cycle() {
     hiLimitPos = pos;
   } else if(homingState == 0) {
     motor.drive(computePID());
-  }
+  }*/
 }
