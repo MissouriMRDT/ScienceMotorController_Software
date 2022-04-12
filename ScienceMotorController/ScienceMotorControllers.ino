@@ -4,15 +4,13 @@ void setup()
 {
   Serial.begin(115200);
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
-  gantry_x_axis.attach(MOTOR_1_IN_A, MOTOR_1_IN_B , MOTOR_1_PWM);
-  gantry_z_axis.attach(MOTOR_2_IN_A, MOTOR_2_IN_B, MOTOR_2_PWM);
-  sensors_z_axis.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
-  water_1.attach(MOTOR_4_IN_A, MOTOR_4_IN_B, MOTOR_4_PWM);
-  water_2.attach(MOTOR_5_IN_A, MOTOR_5_IN_B, MOTOR_5_PWM);
-  water_3.attach(MOTOR_6_IN_A, MOTOR_6_IN_B, MOTOR_6_PWM);
-  water[0] = water_1;
-  water[1] = water_2;
-  water[3] = water_3;
+  gantX = new VNHAxis(MOTOR_1_IN_A, MOTOR_1_IN_B , MOTOR_1_PWM, ENC_1, LIM_SWITCH_1, LIM_SWITCH_2);
+  gantZ.attach(MOTOR_2_IN_A, MOTOR_2_IN_B, MOTOR_2_PWM);
+  sensZ.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
+  uint8_t* tempEnc = (uint8_t*)ENC_1;
+  for(int i = 0; i < 6; i ++){
+    encoder[i].attach(tempEnc[i]);
+  }
 }
 
 void loop()
@@ -28,7 +26,7 @@ void loop()
       int16_t* sensor_speed;
       sensor_speed = (int16_t*)packet.data;
       Serial.println(sensor_speed[0]);
-      sensors_z_axis.drive(sensor_speed[0]);
+      sensZ.drive(sensor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_WATER_DATA_ID:
       int16_t* water_speeds;
@@ -36,20 +34,22 @@ void loop()
       for(int i=0;i<RC_SCIENCEACTUATIONBOARD_WATER_DATA_COUNT;i++)
       {
         Serial.println(water_speeds[i]);
-        water[i].drive(water_speeds[i]);
+        for(int a = 0; a < 3; a ++){
+          digitalWrite(sol[a][i], floor(water_speeds[i] / 1000));
+        }
       }
       break;
     case RC_SCIENCEACTUATIONBOARD_XOOPAXIS_DATA_ID:
       int16_t* xmotor_speed;
       xmotor_speed = (int16_t*)packet.data;
       Serial.println(xmotor_speed[0]);
-      gantry_x_axis.drive(xmotor_speed[0]);
+      gantX.drive(xmotor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_ZOOPAXIS_DATA_ID:
       int16_t* zmotor_speed;
       zmotor_speed = (int16_t*)packet.data;
       Serial.println(zmotor_speed[0]);
-      gantry_z_axis.drive(zmotor_speed[0]);
+      gantZ.drive(zmotor_speed[0]);
       break;
     case RC_SCIENCEACTUATIONBOARD_SCOOPGRABBER_DATA_ID:
       int16_t* scoop_degrees;
