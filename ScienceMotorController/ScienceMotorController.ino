@@ -59,15 +59,13 @@ void loop()
     case RC_SCIENCEACTUATIONBOARD_XOOPAXIS_DATA_ID:
     {
       // TODO: add PID control based off encoder position once installed
-      // set gantry X axis target value
-      gantXTarget = ((int16_t*)packet.data)[0];
+      gantXTarget = ((int16_t*)packet.data)[0];  // set gantry X axis target value
       break;
     }
 
     case RC_SCIENCEACTUATIONBOARD_ZOOPAXIS_DATA_ID:
     {
-      // set gantry Z axis target value
-      gantZTarget = ((int16_t*)packet.data)[0];
+      gantZTarget = ((int16_t*)packet.data)[0];  // set gantry Z axis target value
       break;
     }
 
@@ -78,8 +76,7 @@ void loop()
       // check if scoop needs to change angle (repeatedly setting servo to the same value caused shakiness in testing)
       if(scoopAngle != lastScoopAngle)
       {
-        // set PWM pin to appropriate value
-        analogWrite(SERVO_2, scoopAngle == 0 ? SCOOP_OPEN_VALUE : SCOOP_CLOSED_VALUE);
+        analogWrite(SERVO_2, scoopAngle == 0 ? SCOOP_OPEN_VALUE : SCOOP_CLOSED_VALUE);  // set PWM pin to appropriate value
         lastScoopAngle = scoopAngle;
       }
       break;
@@ -96,5 +93,21 @@ void loop()
   sensZ.drive(sensZTarget);
   gantX.drive(gantXTarget);
   gantZ.drive(gantZTarget);
+
+  // set limitStates bitmask
+  limitStates = 0;
+  for(int i = 0; i < 6; i ++)
+  {
+    // increment bitmask by 1 if current limit is triggered then shift left 1 bit
+    if(digitalRead(enc(i))) limitStates += 1;
+    limitStates << 1;
+  }
+
+  // check if enough time has passed to send telemetry
+  if(millis() - lastUpdateTime >= ROVECOMM_UPDATE_RATE)
+  {
+    // TODO: encoder position telemetry
+    RoveComm.writeReliable(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, 1, limitStates);  // send limitStates bitmask
+  }
   
 }
