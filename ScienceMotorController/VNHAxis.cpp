@@ -87,6 +87,7 @@ void VNHAxis::cycle() {
     case 6: {
       if(isHiLimit) {
         homingState = 0;
+        isCalibrated = true;
         vel = 0;
         hiLimitPos = posEncTicks;
       } else vel = homingSpeedLo;

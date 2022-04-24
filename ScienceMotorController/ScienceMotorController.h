@@ -6,7 +6,6 @@
 #include "RoveUsDigiMa3Pwm.h"
 #include "RoveWatchdog.h"
 #include "Servo.h"
-#include "VNHAxis.h"
 
 // motor pin declarations
 
@@ -70,17 +69,26 @@
 #define ERR_1 PQ_0
 #define ERR_2 PP_4
 
+// parameters
+
+#define SCOOP_OPEN_VALUE 115
+#define SCOOP_CLOSED_VALUE 150
+
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_SCIENCEACTUATIONBOARD_PORT);
 RoveWatchdog Watchdog;
 rovecomm_packet packet;
 
-VNHAxis gantX;
-VNHAxis gantZ;
-VNHAxis sensZ;
+RoveStmVnhPwm sensZ;
+RoveStmVnhPwm gantX;
+RoveStmVnhPwm gantZ;
+int16_t gantXTarget;
+int16_t gantZTarget;
+int16_t sensZTarget;
 RoveStmVnhPwm spare;
 RoveUsDigiMa3Pwm encoder[6];
+bool solStates[3];
 uint8_t sol[3][3] = {{SOL_1, SOL_2, SOL_3}, {SOL_4, SOL_5, SOL_6}, {SOL_7, SOL_8, SOL_9}};
-Servo scoop;
-
+int16_t scoopAngle = 0;
+int16_t lastScoopAngle = 1;
 #endif

@@ -30,6 +30,7 @@ class VNHAxis{
   uint8_t homingState; // 0: Not homing, 1: Homing low limit, 2: Homing high limit
   bool isLoLimit;
   bool isHiLimit;
+  bool isCalibrated;
 
   uint8_t loLimitPin;
   uint8_t hiLimitPin;
@@ -88,8 +89,6 @@ class VNHAxis{
 
     motor.attach(motorInA, motorInB, motorPWM);
     enc.attach(encIn);
-
-    home();
   }
 
 };
