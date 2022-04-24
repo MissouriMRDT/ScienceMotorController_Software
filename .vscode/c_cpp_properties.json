@@ -5,9 +5,9 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/../**",
-                "${workspaceFolder}/../RoveMotor",
-                "${workspaceFolder}/../RoveEncoder",
-                "${workspaceFolder}/../RoveComm"
+                "${workspaceFolder}/../RoveMotor/**",
+                "${workspaceFolder}/../RoveEncoder/**",
+                "${workspaceFolder}/../RoveComm/**"
             ],
             "defines": [
                 "_DEBUG",
