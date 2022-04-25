@@ -7,7 +7,8 @@
                 "${workspaceFolder}/../**",
                 "${workspaceFolder}/../RoveMotor/**",
                 "${workspaceFolder}/../RoveEncoder/**",
-                "${workspaceFolder}/../RoveComm/**"
+                "${workspaceFolder}/../RoveComm/**",
+                "${workspaceFolder}/../RoveHalTiva/**"
             ],
             "defines": [
                 "_DEBUG",

@@ -1,5 +1,5 @@
-#ifndef _SRAActuation
-#define _SRAActuation
+#ifndef _SMoco
+#define _SMoco
 
 #include "RoveComm.h"
 #include "RoveStmVnhPwm.h"
@@ -70,16 +70,16 @@
 
 // parameters
 
-#define SCOOP_OPEN_VALUE        115 //PWM value (0-255) corresponding to scoop open position
-#define SCOOP_CLOSED_VALUE      150 //PWM value (0-255) corresponding to scoop closed position
+#define SCOOP_OPEN_VALUE        115 // PWM value (0-255) corresponding to scoop open position
+#define SCOOP_CLOSED_VALUE      150 // PWM value (0-255) corresponding to scoop closed position
+
+#define WATCHDOG_TIMEOUT        500 // ms without recieving new packet before estop
 
 // RoveComm object declarations
 
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_SCIENCEACTUATIONBOARD_PORT);
 rovecomm_packet packet;
-
-uint32_t lastUpdateTime;
 
 // motor controller object declarations
 
@@ -92,6 +92,9 @@ int16_t gantXTarget;
 int16_t gantZTarget;
 int16_t sensZTarget;
 
+RoveWatchdog watchdog;
+RoveWatchdog telemTimer;
+
 RoveUsDigiMa3Pwm encoder[6];
 
 bool solStates[3];
@@ -99,6 +102,8 @@ bool solStates[3];
 uint8_t sol[3][3] = {{SOL_1, SOL_2, SOL_3}, {SOL_4, SOL_5, SOL_6}, {SOL_7, SOL_8, SOL_9}};
 
 uint8_t enc[6] = {ENC_1, ENC_2, ENC_3, ENC_4, ENC_5, ENC_6};
+
+uint8_t lim[6] = {LIM_SWITCH_1_TOP, LIM_SWITCH_1_BOTTOM, LIM_SWITCH_2_TOP, LIM_SWITCH_2_BOTTOM, LIM_SWITCH_3_TOP, LIM_SWITCH_3_BOTTOM};
 
 int16_t scoopAngle = 0;
 int16_t lastScoopAngle = 1;
