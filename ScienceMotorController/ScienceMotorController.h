@@ -5,6 +5,7 @@
 #include "RoveStmVnhPwm.h"
 #include "RoveUsDigiMa3Pwm.h"
 #include "RoveWatchdog.h"
+#include "RovePid.h"
 
 // motor pin declarations
 
@@ -73,7 +74,29 @@
 #define SCOOP_OPEN_VALUE        115 // PWM value (0-255) corresponding to scoop open position
 #define SCOOP_CLOSED_VALUE      150 // PWM value (0-255) corresponding to scoop closed position
 
+#define GANTX_POS_0             0
+#define GANTX_POS_1             360f
+#define GANTX_POS_2             720f
+#define GANTX_POS_3             1080f
+
 #define WATCHDOG_TIMEOUT        500 // ms without recieving new packet before estop
+
+// PID parameters
+
+// #define SENSZ_KP 1f
+// #define SENSZ_KI 1f
+// #define SENSZ_KD 0.5f
+// #define SENSZ_TOL 30f
+
+#define GANTX_KP 1f
+#define GANTX_KI 1f
+#define GANTX_KD 0.5f
+#define GANTX_TOL 30f
+
+// #define GANTZ_KP 1f
+// #define GANTZ_KI 1f
+// #define GANTZ_KD 0.5f
+// #define GANTZ_TOL 30f
 
 // RoveComm object declarations
 
@@ -88,20 +111,22 @@ RoveStmVnhPwm gantX;
 RoveStmVnhPwm gantZ;
 RoveStmVnhPwm spare;
 
+int16_t sensZTarget;
 int16_t gantXTarget;
 int16_t gantZTarget;
-int16_t sensZTarget;
+
+int16_t gantXPos[4] = {GANTX_POS_0, GANTX_POS_1, GANTX_POS_2, GANTX_POS_3};
+
+// RovePidFloats sensZPID;
+RovePidFloats gantXPID;
+// RovePidFloats gantZPID;
 
 RoveWatchdog watchdog;
 RoveWatchdog telemTimer;
 
-RoveUsDigiMa3Pwm encoder[6];
-
 bool solStates[3];
 
 uint8_t sol[3][3] = {{SOL_1, SOL_2, SOL_3}, {SOL_4, SOL_5, SOL_6}, {SOL_7, SOL_8, SOL_9}};
-
-uint8_t enc[6] = {ENC_1, ENC_2, ENC_3, ENC_4, ENC_5, ENC_6};
 
 uint8_t lim[6] = {LIM_SWITCH_1_TOP, LIM_SWITCH_1_BOTTOM, LIM_SWITCH_2_TOP, LIM_SWITCH_2_BOTTOM, LIM_SWITCH_3_TOP, LIM_SWITCH_3_BOTTOM};
 
@@ -109,5 +134,51 @@ int16_t scoopAngle = 0;
 int16_t lastScoopAngle = 1;
 
 uint8_t limitStates;
+
+// class to track encoder degrees over multiple rotations
+class EncPosTracker
+{
+public:
+    RoveUsDigiMa3Pwm enc;
+
+    uint8_t encPos;
+    uint8_t lastEncPos;
+
+    int16_t pos;
+    int16_t lastPos;
+
+    void attach(uint8_t pin)
+    {
+        enc.attach(pin);
+    }
+    
+    void start()
+    {
+        enc.start();
+    }
+
+    void stop()
+    {
+        enc.stop();
+    }
+
+    int16_t readDegrees()
+    {
+        encPos = enc.readDegrees();
+        int encDelta = encPos - lastEncPos;
+
+        // if there was a jump from very low to very high or vice versa, the encoder likely completed a rotation, so delta needs to be adjusted
+        if(abs(encDelta) > 180)
+        {
+            pos += encPos > lastEncPos ? encDelta - 360 : encDelta + 360;  // if the pos went from low to high, subtract 360 from the reading, otherwise add 360, then increment pos value
+        } else pos += encDelta;
+
+        return pos;
+    }
+};
+
+EncPosTracker sensZEnc;
+EncPosTracker gantXEnc;
+EncPosTracker gantZEnc;
 
 #endif

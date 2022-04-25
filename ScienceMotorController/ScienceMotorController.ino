@@ -9,7 +9,7 @@ void setup()
 {
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
-  // attack motor controllers to pins
+  // attach motor controllers to pins
   sensZ.attach(MOTOR_1_IN_A, MOTOR_1_IN_B, MOTOR_1_PWM);
   gantX.attach(MOTOR_2_IN_A, MOTOR_2_IN_B, MOTOR_2_PWM);
   gantZ.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
@@ -21,6 +21,17 @@ void setup()
   // start telemetry timer
   telemTimer.attach(telemetry());
   telemTimer.start(ROVECOMM_UPDATE_RATE);
+
+  // attach PID controllers
+  gantXPID.attach(-1000f, 1000f, GANTX_KP, GANTX_KI, GANTX_KD);
+
+  // start encoder trackers
+  sensZEnc.attach(ENC_1);
+  sensZEnc.start();
+  gantXEnc.attach(ENC_2);
+  gantXEnc.start();
+  gantZEnc.attach(ENC_3);
+  gantZEnc.start();
 
   // set output pin modes for servos and solenoids
   pinMode(SERVO_1, OUTPUT);
@@ -75,8 +86,9 @@ void loop()
 
     case RC_SCIENCEACTUATIONBOARD_XOOPAXIS_DATA_ID:
     {
-      // TODO: add PID control based off encoder position
       gantXTarget = ((int16_t*)packet.data)[0];  // set gantry X axis target value
+
+      // gantXTarget = gantXPID.incrementPid(gantXPos[((int16_t*)packet.data)[0]], gantXEnc.readDegrees(), GANTX_TOL);
 
       watchdog.clear();
       break;
@@ -125,6 +137,9 @@ void loop()
     if(digitalRead(lim[i])) limitStates += 1;
     limitStates << 1;
   }
+
+  //set encoder positions
+  sensZPos += abs(sensZEnc.readDegrees() - lastSensZPos) < 180 ? sensZ.readDegrees() - lastSensZPos : sensZ.readDegrees;
 }
 
 // send telemetry data
