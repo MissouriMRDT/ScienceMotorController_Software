@@ -75,9 +75,9 @@
 #define SCOOP_CLOSED_VALUE      150 // PWM value (0-255) corresponding to scoop closed position
 
 #define GANTX_POS_0             0
-#define GANTX_POS_1             360f
-#define GANTX_POS_2             720f
-#define GANTX_POS_3             1080f
+#define GANTX_POS_1             360.0
+#define GANTX_POS_2             720.0
+#define GANTX_POS_3             1080.0
 
 #define WATCHDOG_TIMEOUT        500 // ms without recieving new packet before estop
 
@@ -88,10 +88,10 @@
 // #define SENSZ_KD 0.5f
 // #define SENSZ_TOL 30f
 
-#define GANTX_KP 1f
-#define GANTX_KI 1f
-#define GANTX_KD 0.5f
-#define GANTX_TOL 30f
+//#define GANTX_KP 1f
+//#define GANTX_KI 1f
+//#define GANTX_KD 0.5f
+//#define GANTX_TOL 30f
 
 // #define GANTZ_KP 1f
 // #define GANTZ_KI 1f
@@ -115,23 +115,22 @@ int16_t sensZTarget;
 int16_t gantXTarget;
 int16_t gantZTarget;
 
-int16_t gantXPos[4] = {GANTX_POS_0, GANTX_POS_1, GANTX_POS_2, GANTX_POS_3};
+float gantXPos[4] = {GANTX_POS_0, GANTX_POS_1, GANTX_POS_2, GANTX_POS_3};
 
 // RovePidFloats sensZPID;
 RovePidFloats gantXPID;
 // RovePidFloats gantZPID;
 
 RoveWatchdog watchdog;
-RoveWatchdog telemTimer;
 
-bool solStates[3];
+bool solStates[9];
 
-uint8_t sol[3][3] = {{SOL_1, SOL_2, SOL_3}, {SOL_4, SOL_5, SOL_6}, {SOL_7, SOL_8, SOL_9}};
+uint8_t sol[9] = {SOL_1, SOL_2, SOL_3, SOL_4, SOL_5, SOL_6, SOL_7, SOL_8, SOL_9};
 
 uint8_t lim[6] = {LIM_SWITCH_1_TOP, LIM_SWITCH_1_BOTTOM, LIM_SWITCH_2_TOP, LIM_SWITCH_2_BOTTOM, LIM_SWITCH_3_TOP, LIM_SWITCH_3_BOTTOM};
 
-int16_t scoopAngle = 0;
-int16_t lastScoopAngle = 1;
+uint8_t scoopAngle = 0;
+uint8_t lastScoopAngle = 1;
 
 uint8_t limitStates;
 

@@ -15,15 +15,11 @@ void setup()
   gantZ.attach(MOTOR_3_IN_A, MOTOR_3_IN_B, MOTOR_3_PWM);
 
   // start watchdog for mocos
-  watchdog.attach(eStop());
+  watchdog.attach(eStop);
   watchdog.start(WATCHDOG_TIMEOUT);
 
-  // start telemetry timer
-  telemTimer.attach(telemetry());
-  telemTimer.start(ROVECOMM_UPDATE_RATE);
-
   // attach PID controllers
-  gantXPID.attach(-1000f, 1000f, GANTX_KP, GANTX_KI, GANTX_KD);
+//  gantXPID.attach(-1000f, 1000f, GANTX_KP, GANTX_KI, GANTX_KD);
 
   // start encoder trackers
   sensZEnc.attach(ENC_1);
@@ -37,12 +33,9 @@ void setup()
   pinMode(SERVO_1, OUTPUT);
   pinMode(SERVO_2, OUTPUT);
 
-  for(int i = 0; i < 3; i ++)
+  for(int i = 0; i < 9; i ++)
   {
-    for(int a = 0; a < 3; a ++)
-    {
-      pinMode(sol[a][i], OUTPUT);
-    }
+    pinMode(sol[i], OUTPUT);
   }
 }
 
@@ -63,21 +56,16 @@ void loop()
     
     case RC_SCIENCEACTUATIONBOARD_WATER_DATA_ID:
     {
-      int8_t solTarget = ((int8_t*)packet.data)[0];
+      uint16_t solTarget = ((uint16_t*)packet.data)[0];
       // TODO: add control for individual solenoids
 
       // increment through 3 solenoid groups
-      for(int i = 0; i < 3; i ++)
+      for(int i = 0; i < 9; i ++)
       {
         // check corresponding bit then shift right 1 bit
-        solStates[i] = solTarget % 2;
-        solTarget >> 1;
-
-        // increment though each solenoid in group and set to correct state
-        for(int a = 0; a < 3; a ++)
-        {
-          digitalWrite(sol[i][a], solStates[i]);
-        }
+//        solStates[i] = solTarget & 1;
+//        solTarget >> 1;
+        digitalWrite(sol[i], (solTarget & (1 << i)));
       }
 
       watchdog.clear();
@@ -137,18 +125,15 @@ void loop()
     if(digitalRead(lim[i])) limitStates += 1;
     limitStates << 1;
   }
-
-  //set encoder positions
-  sensZPos += abs(sensZEnc.readDegrees() - lastSensZPos) < 180 ? sensZ.readDegrees() - lastSensZPos : sensZ.readDegrees;
 }
-
-// send telemetry data
-void telemetry()
-{
-  // TODO: encoder position telemetry
-  RoveComm.writeReliable(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, 1, limitStates);  // send limitStates bitmask
-  telemTimer.clear();
-}
+//
+//// send telemetry data
+//void telemetry()
+//{
+//  // TODO: encoder position telemetry
+//  RoveComm.writeReliable(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, 1, limitStates);  // send limitStates bitmask
+//  telemTimer.clear();
+//}
 
 // stop all motors
 void eStop()
@@ -158,4 +143,3 @@ void eStop()
   gantZTarget = 0;
   watchdog.clear();
 }
-
