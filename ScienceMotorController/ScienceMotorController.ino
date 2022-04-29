@@ -7,6 +7,7 @@
 
 void setup()
 {
+  Serial.begin(9600);
   RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
   // attach motor controllers to pins
@@ -60,12 +61,10 @@ void loop()
       // TODO: add control for individual solenoids
 
       // increment through 3 solenoid groups
-      for(int i = 0; i < 9; i ++)
+      for(int i = 0; i < 9; i++)
       {
         // check corresponding bit then shift right 1 bit
-//        solStates[i] = solTarget & 1;
-//        solTarget >> 1;
-        digitalWrite(sol[i], (solTarget & (1 << i)));
+        digitalWrite(sol[i], (solTarget & (1 << i)) >= 1);
       }
 
       watchdog.clear();
