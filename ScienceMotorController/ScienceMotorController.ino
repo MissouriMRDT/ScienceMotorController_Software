@@ -7,7 +7,6 @@
 
 void setup()
 {
-    Serial.begin(SERIAL_BAUD);
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
 
     // attach motor controllers to pins
