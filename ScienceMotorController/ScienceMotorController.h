@@ -73,6 +73,9 @@
 
 #define SCOOP_OPEN_VALUE 115   // PWM value (0-255) corresponding to scoop open position
 #define SCOOP_CLOSED_VALUE 150 // PWM value (0-255) corresponding to scoop closed position
+#define SCOOP_MAX_ANGLE 180
+#define SCOOP_MIN_ANGLE 0
+#define SCOOP_THRESHOLD 2
 
 #define GANTX_POS_0 0
 #define GANTX_POS_1 360.0
@@ -131,8 +134,7 @@ uint8_t sol[9] = {SOL_1, SOL_2, SOL_3, SOL_4, SOL_5, SOL_6, SOL_7, SOL_8, SOL_9}
 
 uint8_t lim[6] = {LIM_SWITCH_1_TOP, LIM_SWITCH_1_BOTTOM, LIM_SWITCH_2_TOP, LIM_SWITCH_2_BOTTOM, LIM_SWITCH_3_TOP, LIM_SWITCH_3_BOTTOM};
 
-uint8_t scoopAngle = 0;
-uint8_t lastScoopAngle = 1;
+int16_t scoopAngle = 0;
 
 uint8_t limitStates;
 

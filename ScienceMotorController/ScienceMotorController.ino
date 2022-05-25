@@ -37,6 +37,9 @@ void setup()
     {
         pinMode(sol[i], OUTPUT);
     }
+
+    scoopAngle = SCOOP_CLOSED_VALUE;
+    analogWrite(SERVO_2, SCOOP_CLOSED_VALUE);
 }
 
 void loop()
@@ -83,17 +86,38 @@ void loop()
     }
     case RC_SCIENCEACTUATIONBOARD_SCOOPGRABBER_DATA_ID:
     {
-        scoopAngle = ((uint8_t *)packet.data)[0];
+        uint8_t data = ((uint8_t *)packet.data)[0];
 
-        // check if scoop needs to change angle (repeatedly setting servo to the same value caused shakiness in testing)
-        if (scoopAngle != lastScoopAngle)
-        {
-            analogWrite(SERVO_2, scoopAngle == 0 ? SCOOP_OPEN_VALUE : SCOOP_CLOSED_VALUE); // set PWM pin to appropriate value
-            lastScoopAngle = scoopAngle;
+        /* If 0 is sent: Open
+         * If 1 is sent: Close */
+        if(data == 0) {
+            scoopAngle = SCOOP_OPEN_VALUE;
+        } else {
+            scoopAngle = SCOOP_CLOSED_VALUE;
         }
+
+        analogWrite(SERVO_2, scoopAngle); // set PWM pin to appropriate value
 
         watchdog.clear();
         break;
+    }
+    case RC_SCIENCEACTUATIONBOARD_INCREMENTALSCOOP_DATA_ID:
+    {
+        int8_t data = ((int8_t*)packet.data)[0];
+        if(abs(scoopAngle + data) > SCOOP_THRESHOLD)
+        {
+            scoopAngle += data;
+            if(scoopAngle > SCOOP_MAX_ANGLE) 
+            {
+                scoopAngle = SCOOP_MAX_ANGLE;
+            }
+            else if (scoopAngle < SCOOP_MIN_ANGLE)
+            {
+                scoopAngle = SCOOP_MIN_ANGLE;
+            }
+        }
+        analogWrite(SERVO_2, scoopAngle);
+        watchdog.clear();
     }
     default:
     {
