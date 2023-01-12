@@ -7,38 +7,58 @@
 #include "RoveWatchdog.h"
 
 
-#define CHEM1_INA   PC_6
-#define CHEM1_INB   PE_5
-#define CHEM1_PWM   PF_1
+//Motor controller pin connections
+#define FWD_PWM_1   7
+#define RVS_PWM_1   6
+#define FWD_PWM_2   5
+#define RVS_PWM_2   4
+#define FWD_PWM_3   3
+#define RVS_PWM_3   2
+#define FWD_PWM_4   0
+#define RVS_PWM_4   1
 
-#define CHEM2_INA   PD_3
-#define CHEM2_INB   PC_7
-#define CHEM2_PWM   PF_2
+//Servo pin connections
+#define Servo_1     8
+#define Servo_2     9
+#define Servo_3     10
+#define Servo_4     13
+#define Servo_5     12
+#define Servo_6     11
 
-#define CHEM3_INA   PB_2
-#define CHEM3_INB   PB_3
-#define CHEM3_PWM   PF_3
+//Limit Swtich pin connections
+#define Limit_Switch_1  23
+#define Limit_Switch_2  22
+#define Limit_Switch_3  21
+#define Limit_Switch_4  20
+#define Limit_Switch_5  17
+#define Limit_Switch_6  16
+#define Limit_Switch_7  41
+#define Limit_Switch_8  40
+#define Limit_Switch_9  39
 
-#define GENEVA_INA   PD_4
-#define GENEVA_INB   PD_5
-#define GENEVA_PWM   PG_1
+//Encoder pin connections
+#define Encoder_PWM_1   14
+#define Encoder_PWM_2   15
+#define Encoder_PWM_3   18
+#define Encoder_PWM_4   19
 
-#define Z_AXIS_INA   PQ_0
-#define Z_AXIS_INB   PP_4
-#define Z_AXIS_PWM   PK_4
+//Manual Switch pin connections
+#define Manual_Control_Right    38
+#define Manual_Control_Left     37
 
-#define Z_UPPER _LIM PP_5
-#define Z_LOWER_LIM  PA_7
-#define GENEVA_HOME  PQ_2
-#define GENEVA_SET   PQ_3
+//Motor Controller Button pin connections
+#define Motor_1_SW  27
+#define Motor_2_SW  26
+#define Motor_3_SW  25
+#define Motor_4_SW  24
 
-#define GENEVA_ENC   PM_4
-#define Z_AXIS_ENC   PM_2 //THIS PORT WILL NOT WORK, MUST BE PB_0 or PD_6
-
-#define CHEM1_SW     PG_0
-#define CHEM2_SW     PL_4
-#define CHEM3_SW     PE_1
-#define GENEVA_SW    PE_2
+//Servo Button pin connections
+#define Servo_1_SW  36
+#define Servo_2_SW  35
+#define Servo_3_SW  34
+#define Servo_4_SW  33
+#define Servo_5_SW  31
+#define Servo_6_SW  32
 
 #define NUM_TEST_TUBES      12
 #define TARGET_DEGREE       360/NUM_TEST_TUBES
