@@ -1,26 +1,18 @@
 #include "RoveComm.h"
-#include "RoveStmVnhPwm.h"
 #include "SRAActuation.h"
 #include "RoveWatchdog.h"
 
 void setup()
 {
-  BeginSerial();
-  BeginRoveComm();
-  AttachChemMotors();
-  AttachGenevaMotors();
-  InitButtons();
-  AttachWatchdog();
-  BeginWatchdog();
+  pinMode(0, OUTPUT);
 }
 
 void loop()
 {
-  ParsePackets();
-  CheckButtons();
+  digitalWrite(0, HIGH);
 }
 
-void BeginSerial()
+/*void BeginSerial()
 {
   Serial.begin(115200);
 }
@@ -211,4 +203,4 @@ void CheckButtons()
 void WatchdogClear()
 {
   Watchdog.clear();
-}
+}*/
