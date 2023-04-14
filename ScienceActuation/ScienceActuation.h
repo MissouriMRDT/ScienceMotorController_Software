@@ -115,7 +115,7 @@ RoveJoint ScienceZ(&Motor3);
 // Variables
 uint8_t limitSwitchValues = 0;
 uint16_t jointAngles[3] = {0, 0, 0};
-uint8_t scoopTarget = 0;
+uint8_t scoopTarget = 120;
 bool manualButtons[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool lastManualButtons[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool manualForward = true;
