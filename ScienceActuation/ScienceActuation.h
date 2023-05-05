@@ -15,7 +15,7 @@
 
 // RoveComm declarations
 RoveCommEthernet RoveComm;
-EthernetServer TCPServer(RC_ROVECOMM_SCIENCEACTUATIONBOARD_PORT);
+EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_TCP_PORT);
 
 // Watchdog declarations
 #define WATCHDOG_TIMEOUT 300000
@@ -24,61 +24,59 @@ IntervalTimer Watchdog;
 
 
 // Motor Pins
-#define FWD_PWM_1   7
-#define RVS_PWM_1   6
-#define FWD_PWM_2   5
-#define RVS_PWM_2   4
-#define FWD_PWM_3   3
-#define RVS_PWM_3   2
-#define FWD_PWM_4   1
-#define RVS_PWM_4   0
+#define FWD_PWM_1   25
+#define RVS_PWM_1   24
+#define FWD_PWM_2   10
+#define RVS_PWM_2   9
+#define FWD_PWM_3   12
+#define RVS_PWM_3   11
+#define FWD_PWM_4   8
+#define RVS_PWM_4   7
+#define PUMP_PWM    6
 
 // Servo Pins
-#define SERVO_1     8
-#define SERVO_2     9
-#define SERVO_3     10
-#define SERVO_4     13
-#define SERVO_5     12
-#define SERVO_6     11
+#define SERVO_1     18
+#define SERVO_2     19
+#define SERVO_3     22
+#define SERVO_4     23
 
 // Encoder Pins
-#define ENC_1   14
-#define ENC_2   15
-#define ENC_3   18
-#define ENC_4   19
+#define ENC_1   0
+#define ENC_2   1
+#define ENC_3   2
+#define ENC_4   3
+#define ENC_5   4
 
 // Limit Swtich Pins
-#define LIM_1   23
-#define LIM_2   22
-#define LIM_3   21
-#define LIM_4   20
-#define LIM_5   17
-#define LIM_6   16
-#define LIM_7   41
-#define LIM_8   40
-#define LIM_9   39
+#define LIM_1   40
+#define LIM_2   39
+#define LIM_3   38
+#define LIM_4   37
+#define LIM_5   36
+#define LIM_6   35
+#define LIM_7   34
+#define LIM_8   33
 
 // Manual Switch Pins
-#define SW_FWD  38
-#define SW_RVS  37
+#define SW_FWD  16
+#define SW_RVS  17
 
 // Motor Button pins
-#define MOTOR_SW_1  27
-#define MOTOR_SW_2  26
-#define MOTOR_SW_3  25
-#define MOTOR_SW_4  24
+#define MOTOR_SW_1  32
+#define MOTOR_SW_2  31
+#define MOTOR_SW_3  30
+#define MOTOR_SW_4  29
+#define MOTOR_SW_5  28
 
 // Servo Button pins
-#define SERVO_SW_1  36
-#define SERVO_SW_2  35
-#define SERVO_SW_3  34
-#define SERVO_SW_4  33
-#define SERVO_SW_5  31
-#define SERVO_SW_6  32
+#define SERVO_SW_1  15
+#define SERVO_SW_2  14
+#define SERVO_SW_3  13
+#define SERVO_SW_4  41
 
 
 // Servos
-Servo Servo1, Servo2, Servo3, Servo4, Servo5, Servo6;
+Servo Servo1, Servo2, Servo3, Servo4;
 
 // Motors
 RoveHBridge Motor1(FWD_PWM_1, RVS_PWM_1);
@@ -91,6 +89,7 @@ MA3PWM Encoder1(ENC_1);
 MA3PWM Encoder2(ENC_2);
 MA3PWM Encoder3(ENC_3);
 MA3PWM Encoder4(ENC_4);
+MA3PWM Encoder5(ENC_5);
 
 // Limit Switches
 LimitSwitch LS1(LIM_1);
@@ -101,7 +100,6 @@ LimitSwitch LS5(LIM_5);
 LimitSwitch LS6(LIM_6);
 LimitSwitch LS7(LIM_7);
 LimitSwitch LS8(LIM_8);
-LimitSwitch LS9(LIM_9);
 
 // PID Controllers
 
