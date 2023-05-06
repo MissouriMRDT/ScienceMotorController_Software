@@ -20,6 +20,9 @@ EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_TCP_PORT);
 #define WATCHDOG_TIMEOUT 300000
 IntervalTimer Watchdog;
 
+#define TELEMETRY_PERIOD 150000
+IntervalTimer Telemetry;
+
 
 
 // Motor Pins
@@ -104,9 +107,12 @@ LimitSwitch LS8(LIM_8);
 RoveJoint ScoopX(&Motor1);
 RoveJoint ScoopZ(&Motor2);
 RoveJoint ScienceZ(&Motor3);
+#define MICROSCOPE Motor4
 
 
 // Variables
+int16_t decipercents[4] = {0, 0, 0, 0};
+bool pumpOutput = 0;
 uint8_t limitSwitchValues = 0;
 uint16_t jointAngles[3] = {0, 0, 0};
 uint8_t scoopTarget = 120;
@@ -117,9 +123,9 @@ bool manualForward = true;
 
 // Methods
 void updateLimitSwitchValues();
-void updateJointAngles();
-void updateManualButtons();
+//void updateJointAngles();
 
+void telemetry();
 void estop();
 void feedWatchdog();
 

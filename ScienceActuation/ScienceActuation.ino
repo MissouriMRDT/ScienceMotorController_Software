@@ -40,15 +40,15 @@ void setup() {
     Servo3.attach(SERVO_3);
     Servo4.attach(SERVO_4);
 
-    RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET &TCPServer);
+    RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
+    Telemetry.begin(telemetry, TELEMETRY_PERIOD);
     feedWatchdog();
 }
 
-
-uint32_t lastWriteTimestamp = millis();
-
 void loop() {
-    uint32_t timestamp = millis();
+    float timestamp = ((float) millis()) / 1000.0;
+    //updateJointAngles();
+    updateLimitSwitchValues();
 
     // Parse RoveComm packets
     rovecomm_packet packet = RoveComm.read();
@@ -58,7 +58,7 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_DATA_ID:
         {
             int16_t data = ((int16_t*) packet.data)[0];
-            ScienceZ.drive(data);
+            decipercents[2] = data;
             feedWatchdog();
             break;
         }
@@ -81,8 +81,7 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_WATERPUMP_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
-
-            digitalWrite(PUMP_PWM, data);
+            pumpOutput = data;
 
             feedWatchdog();
             break;
@@ -105,7 +104,7 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_XOOPAXIS_DATA_ID:
         {
             int16_t data = ((int16_t*) packet.data)[0];
-            ScoopX.drive(data);
+            decipercents[0] = data;
             feedWatchdog();
             break;
         }
@@ -114,7 +113,7 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_ZOOPAXIS_DATA_ID:
         {
             int16_t data = ((int16_t*) packet.data)[0];
-            ScoopZ.drive(data);
+            decipercents[1] = data;
             feedWatchdog();
             break;
         }
@@ -167,20 +166,42 @@ void loop() {
     }
 
 
-    // Periodically write telemetry
-    if ((timestamp - lastWriteTimestamp) >= ROVECOMM_UPDATE_RATE*4) {
-        updateJointAngles();
-        RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, jointAngles);
-        updateLimitSwitchValues();
-        RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
-        lastWriteTimestamp = timestamp;
-    }
+    bool direction = digitalRead(SW_RVS);
 
+    // ScoopX
+    if (digitalRead(MOTOR_SW_1)) ScoopX.drive((direction ? -900 : 900), timestamp);
+    else ScoopX.drive(decipercents[0], timestamp);
+    
+    // ScoopZ
+    if (digitalRead(MOTOR_SW_2)) ScoopZ.drive((direction ? -900 : 900), timestamp);
+    else ScoopZ.drive(decipercents[1], timestamp);
+    
+    // ScienceZ
+    if (digitalRead(MOTOR_SW_3)) ScienceZ.drive((direction ? -900 : 900), timestamp);
+    else ScienceZ.drive(decipercents[2], timestamp);
+    
+    // Microscope
+    if (digitalRead(MOTOR_SW_4)) MICROSCOPE.drive((direction ? -900 : 900), timestamp);
+    else MICROSCOPE.drive(decipercents[3], timestamp);
 
-    updateManualButtons();
-
-    Scoop.write(scoopTarget);
-    PumpMUX.write(pumpMUXTarget);
+    // Perisaltic Pump
+    if (digitalRead(MOTOR_SW_5)) digitalWrite(PUMP_PWM, 1);
+    else digitalWrite(PUMP_PWM, pumpOutput);
+    
+    // Scoop
+    if (digitalRead(SERVO_SW_1)) Scoop.write((direction? 0 : 120));
+    else Scoop.write(scoopTarget);
+    
+    // Pump MUX
+    if (digitalRead(SERVO_SW_2)) PumpMUX.write((direction? 0 : 180));
+    else PumpMUX.write(pumpMUXTarget);
+    
+    // Spare Servos
+    if (digitalRead(SERVO_SW_3)) Servo3.write((direction? 0 : 180));
+    else Servo3.write(90);
+    
+    if (digitalRead(SERVO_SW_4)) Servo4.write((direction? 0 : 180));
+    else Servo4.write(90);
 }
 
 
@@ -189,70 +210,26 @@ void updateLimitSwitchValues() {
                         | (ScoopX.atForwardHardLimit() << 2) | (ScienceZ.atForwardHardLimit() << 1) | (ScienceZ.atReverseHardLimit() << 0);
 }
 
+/*
 void updateJointAngles() {
     jointAngles[0] = Encoder3.readDegrees();
     jointAngles[1] = Encoder1.readDegrees();
     jointAngles[2] = Encoder2.readDegrees();
 }
+*/
 
-void updateManualButtons() {
-    for (int i = 0; i < 9; i++) {
-        lastManualButtons[i] = manualButtons[i];
-    }
-
-    manualButtons[0] = digitalRead(SERVO_SW_1);
-    manualButtons[1] = digitalRead(SERVO_SW_2);
-    manualButtons[2] = digitalRead(SERVO_SW_3);
-    manualButtons[3] = digitalRead(SERVO_SW_4);
-
-    manualButtons[4] = digitalRead(MOTOR_SW_1);
-    manualButtons[5] = digitalRead(MOTOR_SW_2);
-    manualButtons[6] = digitalRead(MOTOR_SW_3);
-    manualButtons[7] = digitalRead(MOTOR_SW_4);
-    manualButtons[8] = digitalRead(MOTOR_SW_5);
-
-    manualForward = digitalRead(SW_FWD);
-
-    // Servo buttons
-    if (manualButtons[0]) scoopTarget = 120;
-    else if (lastManualButtons[0]) scoopTarget = 0;
-    
-    if (manualButtons[1]) pumpMUXTarget = (manualForward? 180 : 0);
-    else if (lastManualButtons[1]) pumpMUXTarget = 90;
-    
-    if (manualButtons[2]) Servo3.write((manualForward? 180 : 0));
-    else if (lastManualButtons[2]) Servo3.write(90);
-    
-    if (manualButtons[3]) Servo4.write((manualForward? 180 : 0));
-    else if (lastManualButtons[3]) Servo4.write(90);
-    
-
-    // Motor buttons
-    if (manualButtons[4]) Motor1.drive( (manualForward? 800 : -800) );
-    else if (lastManualButtons[4]) Motor1.drive(0);
-    
-    if (manualButtons[5]) Motor2.drive( (manualForward? 800 : -800) );
-    else if (lastManualButtons[5]) Motor2.drive(0);
-    
-    if (manualButtons[6]) Motor3.drive( (manualForward? 950 : -950) );
-    else if (lastManualButtons[6]) Motor3.drive(0);
-    
-    if (manualButtons[7]) Motor4.drive( (manualForward? 950 : -950) );
-    else if (lastManualButtons[7]) Motor4.drive(0);
-
-    if (manualButtons[8]) digitalWrite(PUMP_PWM, 1);
-    else if (lastManualButtons[8]) digitalWrite(PUMP_PWM, 0);
-    
+void telemetry() {
+    //RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, jointAngles);
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 }
 
 
 void estop() {
-    Motor1.drive(0);
-    Motor2.drive(0);
-    Motor3.drive(0);
-    Motor4.drive(0);
+    for (int i = 0; i < 4; i++) {
+        decipercents[i] = 0;
+    }
+    pumpOutput = 0;
     pumpMUXTarget = 90;
-    digitalWrite(PUMP_PWM, 0);
 }
 
 void feedWatchdog() {
