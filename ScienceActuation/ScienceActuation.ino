@@ -10,39 +10,37 @@ void setup() {
     pinMode(MOTOR_SW_2, INPUT);
     pinMode(MOTOR_SW_3, INPUT);
     pinMode(MOTOR_SW_4, INPUT);
+    pinMode(MOTOR_SW_5, INPUT);
 
     pinMode(SERVO_SW_1, INPUT);
     pinMode(SERVO_SW_2, INPUT);
     pinMode(SERVO_SW_3, INPUT);
     pinMode(SERVO_SW_4, INPUT);
-    pinMode(SERVO_SW_5, INPUT);
-    pinMode(SERVO_SW_6, INPUT);
 
-    Encoder1.begin([]{Encoder1.handleInterrupt();});
-    Encoder2.begin([]{Encoder2.handleInterrupt();});
-    Encoder3.begin([]{Encoder3.handleInterrupt();});
-    Encoder4.begin([]{Encoder4.handleInterrupt();});
+    ScoopX.attachHardLimits(&LS1, &LS2);
+    ScoopZ.attachHardLimits(&LS3, &LS4);
+    ScienceZ.attachHardLimits(&LS5, &LS6);
 
-    ScoopX.attachEncoder(&Encoder1);
-    ScoopZ.attachEncoder(&Encoder2);
-    ScienceZ.attachEncoder(&Encoder3);
+    LS1.configInvert(false);
+    LS2.configInvert(false);
+    LS3.configInvert(false);
+    LS4.configInvert(false);
+    LS5.configInvert(false);
+    LS6.configInvert(false);
+    LS7.configInvert(false);
+    LS8.configInvert(false);
 
-    ScoopX.attachHardLimits(&LS6, &LS3);
-    ScoopZ.attachHardLimits(&LS2, &LS5);
-    ScienceZ.attachHardLimits(&LS1, &LS4);
-
-    LS2.configInvert(true);
-    LS3.configInvert(true);
-    LS6.configInvert(true);
+    Motor1.configMaxOutputs(-900, 900);
+    Motor2.configMaxOutputs(-900, 900);
+    Motor3.configMaxOutputs(-900, 900);
+    Motor4.configMaxOutputs(-900, 900);
 
     Servo1.attach(SERVO_1);
     Servo2.attach(SERVO_2);
     Servo3.attach(SERVO_3);
     Servo4.attach(SERVO_4);
-    Servo5.attach(SERVO_5);
-    Servo6.attach(SERVO_6);
 
-    RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer, RC_ROVECOMM_SCIENCEACTUATIONBOARD_MAC);
+    RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET &TCPServer);
     feedWatchdog();
 }
 
@@ -65,23 +63,32 @@ void loop() {
             break;
         }
 
-        // TODO Set position of selector servo
+        // Open loop control of pump MUX
         case RC_SCIENCEACTUATIONBOARD_WATERSELECTOR_DATA_ID:
         {
             int8_t data = ((int8_t*) packet.data)[0];
+            int16_t tmp = pumpMUXTarget + data;
+
+            if (tmp < 0) tmp = 0;
+            else if (tmp > 180) tmp = 180;
+
+            pumpMUXTarget = tmp;
             feedWatchdog();
             break;
         }
 
-        // TODO Set output of pump servo
+        // Turn perisaltic pump on or off
         case RC_SCIENCEACTUATIONBOARD_WATERPUMP_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
+
+            digitalWrite(PUMP_PWM, data);
+
             feedWatchdog();
             break;
         }
 
-        // TODO
+        // Override joint limit switches
         case RC_SCIENCEACTUATIONBOARD_LIMITSWITCHOVERRIDE_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
@@ -172,7 +179,8 @@ void loop() {
 
     updateManualButtons();
 
-    Servo1.write(scoopTarget);
+    Scoop.write(scoopTarget);
+    PumpMUX.write(pumpMUXTarget);
 }
 
 
@@ -188,7 +196,7 @@ void updateJointAngles() {
 }
 
 void updateManualButtons() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 9; i++) {
         lastManualButtons[i] = manualButtons[i];
     }
 
@@ -196,13 +204,12 @@ void updateManualButtons() {
     manualButtons[1] = digitalRead(SERVO_SW_2);
     manualButtons[2] = digitalRead(SERVO_SW_3);
     manualButtons[3] = digitalRead(SERVO_SW_4);
-    manualButtons[4] = digitalRead(SERVO_SW_5);
-    manualButtons[5] = digitalRead(SERVO_SW_6);
 
-    manualButtons[6] = digitalRead(MOTOR_SW_1);
-    manualButtons[7] = digitalRead(MOTOR_SW_2);
-    manualButtons[8] = digitalRead(MOTOR_SW_3);
-    manualButtons[9] = digitalRead(MOTOR_SW_4);
+    manualButtons[4] = digitalRead(MOTOR_SW_1);
+    manualButtons[5] = digitalRead(MOTOR_SW_2);
+    manualButtons[6] = digitalRead(MOTOR_SW_3);
+    manualButtons[7] = digitalRead(MOTOR_SW_4);
+    manualButtons[8] = digitalRead(MOTOR_SW_5);
 
     manualForward = digitalRead(SW_FWD);
 
@@ -210,43 +217,32 @@ void updateManualButtons() {
     if (manualButtons[0]) scoopTarget = 120;
     else if (lastManualButtons[0]) scoopTarget = 0;
     
-    if (manualButtons[1]) Servo2.write((manualForward? 180 : 0));
-    else if (lastManualButtons[1]) Servo2.write(90);
+    if (manualButtons[1]) pumpMUXTarget = (manualForward? 180 : 0);
+    else if (lastManualButtons[1]) pumpMUXTarget = 90;
     
-    if (manualButtons[2]) Servo3.write(90);
-    else if (lastManualButtons[2]) Servo3.write(0);
+    if (manualButtons[2]) Servo3.write((manualForward? 180 : 0));
+    else if (lastManualButtons[2]) Servo3.write(90);
     
-    if (manualButtons[3]) Servo4.write(90);
-    else if (lastManualButtons[3]) Servo4.write(0);
-    
-    if (manualButtons[4]) Servo5.write(90);
-    else if (lastManualButtons[4]) Servo5.write(0);
-    
-    if (manualButtons[5]) Servo6.write(90);
-    else if (lastManualButtons[5]) Servo6.write(0);
+    if (manualButtons[3]) Servo4.write((manualForward? 180 : 0));
+    else if (lastManualButtons[3]) Servo4.write(90);
     
 
     // Motor buttons
-    if (manualButtons[6]) Motor1.drive( (manualForward? 800 : -800) );
-    else if (lastManualButtons[6]) Motor1.drive(0);
+    if (manualButtons[4]) Motor1.drive( (manualForward? 800 : -800) );
+    else if (lastManualButtons[4]) Motor1.drive(0);
     
-    if (manualButtons[7]) Motor2.drive( (manualForward? 800 : -800) );
-    else if (lastManualButtons[7]) Motor2.drive(0);
+    if (manualButtons[5]) Motor2.drive( (manualForward? 800 : -800) );
+    else if (lastManualButtons[5]) Motor2.drive(0);
     
-    if (manualButtons[8]) Motor3.drive( (manualForward? 950 : -950) );
-    else if (lastManualButtons[8]) Motor3.drive(0);
+    if (manualButtons[6]) Motor3.drive( (manualForward? 950 : -950) );
+    else if (lastManualButtons[6]) Motor3.drive(0);
     
-    if (manualButtons[9]) Motor4.drive( (manualForward? 950 : -950) );
-    else if (lastManualButtons[9]) Motor4.drive(0);
+    if (manualButtons[7]) Motor4.drive( (manualForward? 950 : -950) );
+    else if (lastManualButtons[7]) Motor4.drive(0);
 
-/*
-    for (int i = 0; i < 10; i++) {
-        if (manualButtons[i]) {
-            feedWatchdog();
-            break;
-        }
-    }
-*/
+    if (manualButtons[8]) digitalWrite(PUMP_PWM, 1);
+    else if (lastManualButtons[8]) digitalWrite(PUMP_PWM, 0);
+    
 }
 
 
@@ -255,6 +251,8 @@ void estop() {
     Motor2.drive(0);
     Motor3.drive(0);
     Motor4.drive(0);
+    pumpMUXTarget = 90;
+    digitalWrite(PUMP_PWM, 0);
 }
 
 void feedWatchdog() {

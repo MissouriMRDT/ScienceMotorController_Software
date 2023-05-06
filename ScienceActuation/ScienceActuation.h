@@ -3,7 +3,6 @@
 
 #include <RoveComm.h>
 #include <RoveHBridge.h>
-#include <MA3PWM.h>
 #include <LimitSwitch.h>
 #include <RovePIDController.h>
 #include <RoveJoint.h>
@@ -78,18 +77,15 @@ IntervalTimer Watchdog;
 // Servos
 Servo Servo1, Servo2, Servo3, Servo4;
 
+#define Scoop Servo1
+#define PumpMUX Servo2
+
+
 // Motors
 RoveHBridge Motor1(FWD_PWM_1, RVS_PWM_1);
 RoveHBridge Motor2(FWD_PWM_2, RVS_PWM_2);
 RoveHBridge Motor3(FWD_PWM_3, RVS_PWM_3);
 RoveHBridge Motor4(FWD_PWM_4, RVS_PWM_4);
-
-// Encoders
-MA3PWM Encoder1(ENC_1);
-MA3PWM Encoder2(ENC_2);
-MA3PWM Encoder3(ENC_3);
-MA3PWM Encoder4(ENC_4);
-MA3PWM Encoder5(ENC_5);
 
 // Limit Switches
 LimitSwitch LS1(LIM_1);
@@ -114,8 +110,9 @@ RoveJoint ScienceZ(&Motor3);
 uint8_t limitSwitchValues = 0;
 uint16_t jointAngles[3] = {0, 0, 0};
 uint8_t scoopTarget = 120;
-bool manualButtons[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool lastManualButtons[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t pumpMUXTarget = 90;
+bool manualButtons[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool lastManualButtons[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool manualForward = true;
 
 // Methods
