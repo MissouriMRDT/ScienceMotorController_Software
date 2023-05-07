@@ -21,10 +21,10 @@ void setup() {
     ScoopZ.attachHardLimits(&LS3, &LS4);
     ScienceZ.attachHardLimits(&LS5, &LS6);
 
-    LS1.configInvert(false);
-    LS2.configInvert(false);
+    LS1.configInvert(true);
+    LS2.configInvert(true);
     LS3.configInvert(false);
-    LS4.configInvert(false);
+    LS4.configInvert(true);
     LS5.configInvert(false);
     LS6.configInvert(false);
     LS7.configInvert(false);

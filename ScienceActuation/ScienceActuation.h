@@ -105,8 +105,8 @@ LimitSwitch LS8(LIM_8);
 
 // Joints
 RoveJoint ScoopX(&Motor1);
-RoveJoint ScoopZ(&Motor2);
-RoveJoint ScienceZ(&Motor3);
+RoveJoint ScoopZ(&Motor3);
+RoveJoint ScienceZ(&Motor2);
 #define MICROSCOPE Motor4
 
 
