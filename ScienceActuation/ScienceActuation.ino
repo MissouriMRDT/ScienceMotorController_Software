@@ -35,7 +35,7 @@ void setup() {
     Motor3.configMaxOutputs(-900, 900);
     Motor4.configMaxOutputs(-900, 900);
 
-    Servo1.attach(SERVO_1);
+    Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2);
     Servo3.attach(SERVO_3);
     Servo4.attach(SERVO_4);
@@ -122,8 +122,8 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_SCOOPGRABBER_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
-            if (data) scoopTarget = 120;
-            else scoopTarget = 0;
+            if (data) scoopTarget = 180;
+            else scoopTarget = 120;
             feedWatchdog();
             break;
         }
@@ -139,11 +139,11 @@ void loop() {
         // Increment scoop target position
         case RC_SCIENCEACTUATIONBOARD_INCREMENTALSCOOP_DATA_ID:
         {
-            int8_t data = ((int8_t*) packet.data)[0];
+            int8_t data = -((int8_t*) packet.data)[0];
             int16_t tmp = scoopTarget + data;
 
             if (tmp > 180) tmp = 180;
-            else if (tmp < 0) tmp = 0;
+            else if (tmp < 120) tmp = 120;
 
             scoopTarget = tmp;
             feedWatchdog();
@@ -154,15 +154,19 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_BUMPSCOOP_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
-            feedWatchdog();
+            
             break;
         }
 
-        // Default
-        default:
+        // Open loop control of microscope
+        case RC_SCIENCEACTUATIONBOARD_MICROSCOPEFOCUS_DATA_ID:
         {
+            int16_t data = ((int16_t*) packet.data)[0];
+            decipercents[3] = data;
+            feedWatchdog();
             break;
         }
+        
     }
 
 
@@ -189,8 +193,8 @@ void loop() {
     else digitalWrite(PUMP_PWM, pumpOutput);
     
     // Scoop
-    if (digitalRead(SERVO_SW_1)) Scoop.write((direction? 0 : 120));
-    else Scoop.write(scoopTarget);
+    if (digitalRead(SERVO_SW_1)) Scoop.write((direction? 180 : 120));
+    Scoop.write(scoopTarget);
     
     // Pump MUX
     if (digitalRead(SERVO_SW_2)) PumpMUX.write((direction? 0 : 180));
