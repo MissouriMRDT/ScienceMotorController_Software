@@ -17,6 +17,8 @@ void setup() {
     pinMode(SERVO_SW_3, INPUT);
     pinMode(SERVO_SW_4, INPUT);
 
+    pinMode(PUMP_PWM, OUTPUT);
+
     ScoopX.attachHardLimits(&LS1, &LS2);
     ScoopZ.attachHardLimits(&LS3, &LS4);
     ScienceZ.attachHardLimits(&LS5, &LS6);
@@ -39,6 +41,8 @@ void setup() {
     Servo2.attach(SERVO_2);
     Servo3.attach(SERVO_3);
     Servo4.attach(SERVO_4);
+
+    Scoop.write(scoopTarget);
 
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
     Telemetry.begin(telemetry, TELEMETRY_PERIOD);
@@ -193,7 +197,7 @@ void loop() {
     else digitalWrite(PUMP_PWM, pumpOutput);
     
     // Scoop
-    if (digitalRead(SERVO_SW_1)) Scoop.write((direction? 180 : 120));
+    if (digitalRead(SERVO_SW_1)) scoopTarget = (direction? 150 : 90);
     Scoop.write(scoopTarget);
     
     // Pump MUX
