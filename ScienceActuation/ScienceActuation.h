@@ -4,6 +4,7 @@
 #include <RoveComm.h>
 #include <RoveHBridge.h>
 #include <LimitSwitch.h>
+#include <RoveQuadEncoder.h>
 #include <RovePIDController.h>
 #include <RoveJoint.h>
 
@@ -98,10 +99,16 @@ LimitSwitch LS4(LIM_4);
 LimitSwitch LS5(LIM_5);
 LimitSwitch LS6(LIM_6);
 LimitSwitch LS7(LIM_7);
-LimitSwitch LS8(LIM_8);
+
+// Encoders
+RoveQuadEncoder Encoder1(ENC_1, ENC_2, 360.0);
+RoveQuadEncoder Encoder2(ENC_3, ENC_4, 360.0);
+RoveQuadEncoder Encoder3(ENC_5, LIM_8, 360.0);
 
 // PID Controllers
-
+RovePIDController PID1(0.5, 0, 0);
+RovePIDController PID2(0.5, 0, 0);
+RovePIDController PID3(0, 0, 0);
 
 // Joints
 RoveJoint ScoopX(&Motor1);
@@ -110,20 +117,38 @@ RoveJoint ScienceZ(&Motor2);
 #define MICROSCOPE Motor4
 
 
+
+// Closed loop
+uint8_t calibrate = 0; // 0 for not calibrating, 1 for calibrating ScoopX, 2 for calibrating ScoopZ
+bool calibrated = false;
+bool closedLoopActive = false;
+
+uint8_t closedLoopMode = 255;
+enum ClosedLoopMode {
+    GROUND = 0,
+    POSITION_1 = 1, // Funnels 1 and 2
+    POSITION_2 = 2, // Funnels 3 and 4
+    POSITION_3 = 3, // Funnels 5 and 6
+    POSITION_4 = 4, // Funnels 7 and 8
+    POSITION_5 = 5, // Funnels 9 and 10
+    POSITION_6 = 6, // Funnels 11 and 12
+    CALIBRATE = 7
+};
+
+#define SCOOP_DROP_HEIGHT 1500
+#define SCOOP_DOWN_HEIGHT 18800
+#define SCOOP_OUT_THRESHOLD -4000
+
+
 // Variables
 int16_t decipercents[4] = {0, 0, 0, 0};
 bool pumpOutput = 0;
-uint8_t limitSwitchValues = 0;
-uint16_t jointAngles[3] = {0, 0, 0};
-uint8_t scoopTarget = 180;
+uint8_t scoopTarget = 50;
 uint8_t pumpMUXTarget = 90;
 bool manualButtons[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool lastManualButtons[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool manualForward = true;
 
-// Methods
-void updateLimitSwitchValues();
-//void updateJointAngles();
 
 void telemetry();
 void estop();

@@ -19,23 +19,48 @@ void setup() {
 
     pinMode(PUMP_PWM, OUTPUT);
 
-    ScoopX.attachHardLimits(&LS1, &LS2);
+    ScoopX.attachHardLimits(&LS2, &LS1);
     ScoopZ.attachHardLimits(&LS3, &LS4);
     ScienceZ.attachHardLimits(&LS5, &LS6);
 
     LS1.configInvert(true);
     LS2.configInvert(true);
-    LS3.configInvert(false);
-    LS4.configInvert(true);
+    LS3.configInvert(true);
+    LS4.configInvert(false);
     LS5.configInvert(false);
     LS6.configInvert(false);
     LS7.configInvert(false);
-    LS8.configInvert(false);
+
+    Motor1.configInvert(false);
+    Motor2.configInvert(true);
+    Motor3.configInvert(true);
+    Motor4.configInvert(false); // TODO zoom when +
+
+    Encoder1.configInvert(false);
+    Encoder2.configInvert(true);
+    Encoder3.configInvert(true);
+
+    Encoder1.begin([]{ Encoder1.handleInterrupt(); });
+    Encoder2.begin([]{ Encoder2.handleInterrupt(); });
+    Encoder3.begin([]{ Encoder3.handleInterrupt(); });
+
+    ScoopX.attachEncoder(&Encoder1);
+    ScoopZ.attachEncoder(&Encoder2);
+    ScienceZ.attachEncoder(&Encoder3);
+
+    ScoopX.attachPID(&PID1);
+    ScoopZ.attachPID(&PID2);
+    ScienceZ.attachPID(&PID3);
 
     Motor1.configMaxOutputs(-900, 900);
     Motor2.configMaxOutputs(-900, 900);
     Motor3.configMaxOutputs(-900, 900);
     Motor4.configMaxOutputs(-900, 900);
+
+    Motor1.configMinOutputs(-70, 70);
+    Motor2.configMinOutputs(-170, 70);
+    Motor3.configMinOutputs(-50, 50);
+    Motor4.configMinOutputs(-50, 50);
 
     Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2);
@@ -51,8 +76,6 @@ void setup() {
 
 void loop() {
     float timestamp = ((float) millis()) / 1000.0;
-    //updateJointAngles();
-    updateLimitSwitchValues();
 
     // Parse RoveComm packets
     rovecomm_packet packet = RoveComm.read();
@@ -62,7 +85,9 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_DATA_ID:
         {
             int16_t data = ((int16_t*) packet.data)[0];
+
             decipercents[2] = data;
+
             feedWatchdog();
             break;
         }
@@ -85,6 +110,7 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_WATERPUMP_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
+
             pumpOutput = data;
 
             feedWatchdog();
@@ -95,12 +121,14 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_LIMITSWITCHOVERRIDE_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
+
             ScoopZ.overrideForwardHardLimit(data & (1<<5));
             ScoopZ.overrideReverseHardLimit(data & (1<<4));
             ScoopX.overrideReverseHardLimit(data & (1<<3));
             ScoopX.overrideForwardHardLimit(data & (1<<2));
             ScienceZ.overrideForwardHardLimit(data & (1<<1));
             ScienceZ.overrideReverseHardLimit(data & (1<<0));
+            
             break;
         }
 
@@ -109,6 +137,12 @@ void loop() {
         {
             int16_t data = ((int16_t*) packet.data)[0];
             decipercents[0] = data;
+
+            if (closedLoopActive) {
+                closedLoopActive = false;
+                decipercents[1] = 0;
+            }
+
             feedWatchdog();
             break;
         }
@@ -118,6 +152,12 @@ void loop() {
         {
             int16_t data = ((int16_t*) packet.data)[0];
             decipercents[1] = data;
+            
+            if (closedLoopActive) {
+                closedLoopActive = false;
+                decipercents[0] = 0;
+            }
+
             feedWatchdog();
             break;
         }
@@ -126,16 +166,29 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_SCOOPGRABBER_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
-            if (data) scoopTarget = 180;
-            else scoopTarget = 120;
-            feedWatchdog();
+
+            switch (data) {
+                case 0:  scoopTarget = 100;  break;
+                case 1:  scoopTarget = 50;   break;
+                case 2:  scoopTarget = 75;   break;
+            }
+            
             break;
         }
 
-        // TODO Closed loop control of ScoopX
+        // Closed loop control of Scoop
         case RC_SCIENCEACTUATIONBOARD_GOTOPOSITION_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
+
+            if (!closedLoopActive || closedLoopMode != data) {
+                if ((closedLoopMode == GROUND) || (Encoder1.readDegrees() > SCOOP_OUT_THRESHOLD)) calibrate = 1;
+                else calibrate = 2;
+
+                closedLoopMode = data;
+                closedLoopActive = true;
+            }
+            
             feedWatchdog();
             break;
         }
@@ -143,22 +196,22 @@ void loop() {
         // Increment scoop target position
         case RC_SCIENCEACTUATIONBOARD_INCREMENTALSCOOP_DATA_ID:
         {
-            int8_t data = -((int8_t*) packet.data)[0];
+            int8_t data = ((int8_t*) packet.data)[0];
             int16_t tmp = scoopTarget + data;
 
-            if (tmp > 180) tmp = 180;
-            else if (tmp < 120) tmp = 120;
-
+            if (tmp > 100) tmp = 100;
+            else if (tmp < 50) tmp = 50;
             scoopTarget = tmp;
+
             feedWatchdog();
             break;
         }
 
-        // Open and close servo scoop in quick succession
+        // TODO: Open and close servo scoop in quick succession
         case RC_SCIENCEACTUATIONBOARD_BUMPSCOOP_DATA_ID:
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
-            
+
             break;
         }
 
@@ -166,7 +219,9 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_MICROSCOPEFOCUS_DATA_ID:
         {
             int16_t data = ((int16_t*) packet.data)[0];
+
             decipercents[3] = data;
+
             feedWatchdog();
             break;
         }
@@ -176,13 +231,70 @@ void loop() {
 
     bool direction = digitalRead(SW_RVS);
 
-    // ScoopX
-    if (digitalRead(MOTOR_SW_1)) ScoopX.drive((direction ? -900 : 900), timestamp);
-    else ScoopX.drive(decipercents[0], timestamp);
-    
-    // ScoopZ
-    if (digitalRead(MOTOR_SW_2)) ScoopZ.drive((direction ? -900 : 900), timestamp);
-    else ScoopZ.drive(decipercents[1], timestamp);
+    if (closedLoopActive) {
+
+        if (calibrate == 1) {
+            ScoopX.drive(500, timestamp);
+            ScoopZ.drive(0, timestamp);
+            if (ScoopX.atForwardHardLimit()) {
+                Encoder1.setDegrees(0);
+                calibrate = 2;
+            }
+        }
+        else if (calibrate == 2) {
+            ScoopX.drive(0, timestamp);
+            ScoopZ.drive(-600, timestamp);
+            if (ScoopZ.atReverseHardLimit()) {
+                Encoder2.setDegrees(0);
+                calibrate = 0;
+                calibrated = true;
+            }
+        }
+        else if (closedLoopMode == CALIBRATE) {
+            calibrate = 1;
+        }
+        else if (calibrated) {
+            // ScoopX
+            float scoopXTarget;
+            switch (closedLoopMode) {
+                case GROUND:      scoopXTarget = -100;    break;
+                case POSITION_1:  scoopXTarget = -7100;   break;
+                case POSITION_2:  scoopXTarget = -10200;  break;
+                case POSITION_3:  scoopXTarget = -13100;  break;
+                case POSITION_4:  scoopXTarget = -16150;  break;
+                case POSITION_5:  scoopXTarget = -19550;  break;
+                case POSITION_6:  scoopXTarget = -22500;  break;
+            }
+            ScoopX.setAngle(scoopXTarget, timestamp);
+
+            // ScoopZ
+            float scoopZTarget;
+            switch (closedLoopMode) {
+                case GROUND:
+                    scoopZTarget = SCOOP_DOWN_HEIGHT;
+                    break;
+                case POSITION_1: case POSITION_2: case POSITION_3: case POSITION_4: case POSITION_5: case POSITION_6:
+                    scoopZTarget = SCOOP_DROP_HEIGHT;
+                    break;
+            }
+            if (abs(PID1.error()) < 800) ScoopZ.setAngle(scoopZTarget, timestamp);
+            else ScoopZ.drive(0, timestamp);
+        }
+        else {
+            ScoopX.drive(0, timestamp);
+            ScoopZ.drive(0, timestamp);
+        }
+
+    }
+    else {
+        // ScoopX
+        if (digitalRead(MOTOR_SW_1)) ScoopX.drive((direction ? -900 : 900), timestamp);
+        else ScoopX.drive(decipercents[0], timestamp);
+        
+        // ScoopZ
+        if (digitalRead(MOTOR_SW_2)) ScoopZ.drive((direction ? -900 : 900), timestamp);
+        else ScoopZ.drive(decipercents[1], timestamp);
+    }
     
     // ScienceZ
     if (digitalRead(MOTOR_SW_3)) ScienceZ.drive((direction ? -900 : 900), timestamp);
@@ -197,7 +309,7 @@ void loop() {
     else digitalWrite(PUMP_PWM, pumpOutput);
     
     // Scoop
-    if (digitalRead(SERVO_SW_1)) scoopTarget = (direction? 150 : 90);
+    if (digitalRead(SERVO_SW_1)) scoopTarget = (direction? 100 : 50);
     Scoop.write(scoopTarget);
     
     // Pump MUX
@@ -213,26 +325,20 @@ void loop() {
 }
 
 
-void updateLimitSwitchValues() {
-    limitSwitchValues = (ScoopZ.atForwardHardLimit() << 5) | (ScoopZ.atReverseHardLimit() << 4) | (ScoopX.atReverseHardLimit() << 3) 
-                        | (ScoopX.atForwardHardLimit() << 2) | (ScienceZ.atForwardHardLimit() << 1) | (ScienceZ.atReverseHardLimit() << 0);
-}
-
-/*
-void updateJointAngles() {
-    jointAngles[0] = Encoder3.readDegrees();
-    jointAngles[1] = Encoder1.readDegrees();
-    jointAngles[2] = Encoder2.readDegrees();
-}
-*/
 
 void telemetry() {
-    //RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, jointAngles);
+    float angles[3] = { Encoder1.readDegrees(), Encoder2.readDegrees(), Encoder3.readDegrees() };
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, jointAngles);
+
+    uint8_t limitSwitchValues = (ScoopZ.atForwardHardLimit() << 5) | (ScoopZ.atReverseHardLimit() << 4) | (ScoopX.atReverseHardLimit() << 3) 
+                                | (ScoopX.atForwardHardLimit() << 2) | (ScienceZ.atForwardHardLimit() << 1) | (ScienceZ.atReverseHardLimit() << 0);
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 }
 
 
 void estop() {
+    closedLoopActive = false;
+    calibrate = 0;
     for (int i = 0; i < 4; i++) {
         decipercents[i] = 0;
     }
