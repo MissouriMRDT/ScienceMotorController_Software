@@ -327,8 +327,8 @@ void loop() {
 
 
 void telemetry() {
-    float angles[3] = { Encoder1.readDegrees(), Encoder2.readDegrees(), Encoder3.readDegrees() };
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, jointAngles);
+    float positions[3] = { Encoder1.readDegrees(), Encoder2.readDegrees(), Encoder3.readDegrees() };
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, positions);
 
     uint8_t limitSwitchValues = (ScoopZ.atForwardHardLimit() << 5) | (ScoopZ.atReverseHardLimit() << 4) | (ScoopX.atReverseHardLimit() << 3) 
                                 | (ScoopX.atForwardHardLimit() << 2) | (ScienceZ.atForwardHardLimit() << 1) | (ScienceZ.atReverseHardLimit() << 0);
