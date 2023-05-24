@@ -96,13 +96,9 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_WATERSELECTOR_DATA_ID:
         {
             int8_t data = ((int8_t*) packet.data)[0];
-            int16_t tmp = pumpMUXTarget + data;
-
-            if (tmp < 0) tmp = 0;
-            else if (tmp > 180) tmp = 180;
-
-            pumpMUXTarget = tmp;
-            feedWatchdog();
+            
+            pumpMUXOutput = data;
+            pumpMUXClosedLoopActive = false;
             break;
         }
 
@@ -138,8 +134,8 @@ void loop() {
             int16_t data = ((int16_t*) packet.data)[0];
             decipercents[0] = data;
 
-            if (closedLoopActive) {
-                closedLoopActive = false;
+            if (scoopClosedLoopActive) {
+                scoopClosedLoopActive = false;
                 decipercents[1] = 0;
             }
 
@@ -153,8 +149,8 @@ void loop() {
             int16_t data = ((int16_t*) packet.data)[0];
             decipercents[1] = data;
             
-            if (closedLoopActive) {
-                closedLoopActive = false;
+            if (scoopClosedLoopActive) {
+                scoopClosedLoopActive = false;
                 decipercents[0] = 0;
             }
 
@@ -181,12 +177,12 @@ void loop() {
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
 
-            if (!closedLoopActive || closedLoopMode != data) {
-                if ((closedLoopMode == GROUND) || (Encoder1.readDegrees() > SCOOP_OUT_THRESHOLD)) calibrate = 1;
-                else calibrate = 2;
+            if (!scoopClosedLoopActive || scoopClosedLoopMode != data) {
+                if ((scoopClosedLoopMode == GROUND) || (Encoder1.readDegrees() > SCOOP_OUT_THRESHOLD)) scoopCalibrationMode = 1;
+                else scoopCalibrationMode = 2;
 
-                closedLoopMode = data;
-                closedLoopActive = true;
+                scoopClosedLoopMode = data;
+                scoopClosedLoopActive = true;
             }
             
             feedWatchdog();
@@ -225,38 +221,46 @@ void loop() {
             feedWatchdog();
             break;
         }
+
+        // TODO: Closed loop control of pump MUX
+        case 80085: {
+            uint8_t data = ((uint8_t*) packet.data)[0];
+
+            pumpMUXClosedLoopMode = data;
+            pumpMUXClosedLoopActive = true;
+        }
         
     }
 
 
     bool direction = digitalRead(SW_RVS);
 
-    if (closedLoopActive) {
+    if (scoopClosedLoopActive) {
 
-        if (calibrate == 1) {
+        if (scoopCalibrationMode == 1) {
             ScoopX.drive(500, timestamp);
             ScoopZ.drive(0, timestamp);
             if (ScoopX.atForwardHardLimit()) {
                 Encoder1.setDegrees(0);
-                calibrate = 2;
+                scoopCalibrationMode = 2;
             }
         }
-        else if (calibrate == 2) {
+        else if (scoopCalibrationMode == 2) {
             ScoopX.drive(0, timestamp);
             ScoopZ.drive(-600, timestamp);
             if (ScoopZ.atReverseHardLimit()) {
                 Encoder2.setDegrees(0);
-                calibrate = 0;
-                calibrated = true;
+                scoopCalibrationMode = 0;
+                scoopCalibrated = true;
             }
         }
-        else if (closedLoopMode == CALIBRATE) {
-            calibrate = 1;
+        else if (scoopClosedLoopMode == CALIBRATE) {
+            scoopCalibrationMode = 1;
         }
-        else if (calibrated) {
+        else if (scoopCalibrated) {
             // ScoopX
             float scoopXTarget;
-            switch (closedLoopMode) {
+            switch (scoopClosedLoopMode) {
                 case GROUND:      scoopXTarget = -100;    break;
                 case POSITION_1:  scoopXTarget = -7100;   break;
                 case POSITION_2:  scoopXTarget = -10200;  break;
@@ -269,7 +273,7 @@ void loop() {
 
             // ScoopZ
             float scoopZTarget;
-            switch (closedLoopMode) {
+            switch (scoopClosedLoopMode) {
                 case GROUND:
                     scoopZTarget = SCOOP_DOWN_HEIGHT;
                     break;
@@ -313,8 +317,39 @@ void loop() {
     Scoop.write(scoopTarget);
     
     // Pump MUX
-    if (digitalRead(SERVO_SW_2)) PumpMUX.write((direction? 0 : 180));
-    else PumpMUX.write(pumpMUXTarget);
+    if (pumpMUXClosedLoopActive) {
+        if (!pumpMUXCalibrated || (pumpMUXClosedLoopMode == 0)) { // calibrate
+            drivePumpMux(-50);
+            //if limit switch pressed, zero
+        }
+        else {
+            float pumpMUXTarget = 0;
+            switch (pumpMUXClosedLoopMode) {
+                case 1:   pumpMUXTarget = 0;   break;
+                case 2:   pumpMUXTarget = 0;   break;
+                case 3:   pumpMUXTarget = 0;   break;
+                case 4:   pumpMUXTarget = 0;   break;
+                case 5:   pumpMUXTarget = 0;   break;
+                case 6:   pumpMUXTarget = 0;   break;
+                case 7:   pumpMUXTarget = 0;   break;
+                case 8:   pumpMUXTarget = 0;   break;
+                case 9:   pumpMUXTarget = 0;   break;
+                case 10:  pumpMUXTarget = 0;   break;
+                case 11:  pumpMUXTarget = 0;   break;
+                case 12:  pumpMUXTarget = 0;   break;
+            }
+
+            float output = PID4.calculate(pumpMUXTarget, Encoder4.readDegrees(), timestamp);
+            if (output > 90) output = 90;
+            else if (output < -90) output = -90;
+
+            PumpMUX.write(90 + output);
+        }
+    }
+    else {
+        if (digitalRead(SERVO_SW_2)) drivePumpMux(direction? -90 : 90);
+        else drivePumpMux(pumpMUXOutput);
+    }
     
     // Spare Servos
     if (digitalRead(SERVO_SW_3)) Servo3.write((direction? 0 : 180));
@@ -324,10 +359,15 @@ void loop() {
     else Servo4.write(90);
 }
 
+// -90 to 90
+void drivePumpMux(int8_t output) {
+    // check limit switch
+    PumpMUX.write(90 + output)
+}
 
 
 void telemetry() {
-    float positions[3] = { Encoder1.readDegrees(), Encoder2.readDegrees(), Encoder3.readDegrees() };
+    float positions[3] = { Encoder1.readDegrees(), Encoder2.readDegrees(), Encoder4.readDegrees() };
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, positions);
 
     uint8_t limitSwitchValues = (ScoopZ.atForwardHardLimit() << 5) | (ScoopZ.atReverseHardLimit() << 4) | (ScoopX.atReverseHardLimit() << 3) 
@@ -337,13 +377,14 @@ void telemetry() {
 
 
 void estop() {
-    closedLoopActive = false;
-    calibrate = 0;
+    scoopClosedLoopActive = false;
+    scoopCalibrationMode = 0;
     for (int i = 0; i < 4; i++) {
         decipercents[i] = 0;
     }
     pumpOutput = 0;
-    pumpMUXTarget = 90;
+    pumpMUXClosedLoopActive = false;
+    pumpMUXOutput = 0;
 }
 
 void feedWatchdog() {
