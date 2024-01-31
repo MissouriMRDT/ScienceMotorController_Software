@@ -3,55 +3,54 @@
 
 
 // Motor Pins
-#define FWD_PWM_1   25
-#define RVS_PWM_1   24
-#define FWD_PWM_2   10
-#define RVS_PWM_2   9
-#define FWD_PWM_3   12
-#define RVS_PWM_3   11
-#define FWD_PWM_4   8
-#define RVS_PWM_4   7
-#define PUMP_PWM    6
+#define MOCO1_FWD    5
+#define MOCO1_RVS    6
+#define MOCO2_FWD    1
+#define MOCO2_RVS    2
+#define MOCO3_FWD    3
+#define MOCO3_RVS    4
+#define MOCO4_FWD    7
+#define MOCO4_RVS    8
 
 // Servo Pins
-#define SERVO_1     18
-#define SERVO_2     19
-#define SERVO_3     22
-#define SERVO_4     23
+#define SERVO_1    25
+#define SERVO_2    29
 
 // Encoder Pins
-#define ENC_1   0
-#define ENC_2   1
-#define ENC_3   2
-#define ENC_4   3
-#define ENC_5   4
+#define ENCODER_1A    17
+#define ENCODER_1B    18
+#define ENCODER_2A    15
+#define ENCODER_2B    16
+#define ENCODER_3A    13
+#define ENCODER_3B    14
+
 
 // Limit Swtich Pins
-#define LIM_1   40
-#define LIM_2   39
-#define LIM_3   38
-#define LIM_4   37
-#define LIM_5   36
-#define LIM_6   35
-#define LIM_7   34
-#define LIM_8   33
+#define LIMITSWITCH1    21
+#define LIMITSWITCH2    22
+#define LIMITSWITCH3    23
+#define LIMITSWITCH4    0
+#define LIMITSWITCH5    24
+#define LIMITSWITCH6    30
 
 // Manual Switch Pins
-#define SW_FWD  16
-#define SW_RVS  17
+#define DIR_SW    32
 
 // Motor Button pins
-#define MOTOR_SW_1  32
-#define MOTOR_SW_2  31
-#define MOTOR_SW_3  30
-#define MOTOR_SW_4  29
-#define MOTOR_SW_5  28
+#define SW1    41
+#define SW2    40
+#define SW3    39
+#define SW4    38
+#define SW5    37
+#define SW6    36
+#define SW7    35
+#define SW8    34
 
-// Servo Button pins
-#define SERVO_SW_1  15
-#define SERVO_SW_2  14
-#define SERVO_SW_3  13
-#define SERVO_SW_4  41
+// Laser
+#define LAS    31
 
+// Pumps
+#define PUMP1    27
+#define PUMP2    26
 
 #endif
