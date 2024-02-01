@@ -54,6 +54,11 @@ RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 1);
 // Joints
 RoveJoint ScoopAxis(&Motor1);
 RoveJoint SensorAxis(&Motor2);
+#define Auger Motor3
+
+int16_t ScoopAxisDecipercent = 0;
+int16_t SensorAxisDecipercent = 0;
+int16_t AugerDecipercent = 0;
 
 // Methods
 void telemetry();

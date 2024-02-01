@@ -63,24 +63,91 @@ void loop() {
     switch (packet.data_id) {
 
         // Open loop control of ScienceZ
-        case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_DATA_ID:
+        case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_OPENLOOP_DATA_ID:
         {
-            int16_t data = ((int16_t*) packet.data)[0];
+            int16_t data = *((int16_t*) packet.data);
 
-            decipercents[2] = data;
+            ScoopAxisDecipercent = data;
 
             feedWatchdog();
+
+            break;
+        }
+        
+        case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_OPENLOOP_DATA_ID:
+        {
+            int16_t data = *((int16_t*) packet.data);
+
+            SensorAxisDecipercent = data;
+
+            feedWatchdog();
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_SETPOSITION_DATA_ID:
+        {
+
+
+
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_SETPOSITION_DATA_ID:
+        {
+
+
+
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_INCREMENTPOSITION_DATA_ID:
+        {
+
+
+
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_INCREMENTPOSITION_DATA_ID:
+        {
+
+
+
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_AUGER_DATA_ID:
+        {
+            int16_t data = *((int16_t*) packet.data);
+            
+            AugerDecipercent = data;
+
+            feedWatchdog();
+
+            break;
+        }
+
+        case RC_SCIENCEACTUATIONBOARD_MICROSCOPE_DATA_ID:
+        {
+
+
+
+
             break;
         }
 
         // Turn perisaltic pump on or off
         case RC_SCIENCEACTUATIONBOARD_WATERPUMP_DATA_ID:
         {
-            uint8_t data = ((uint8_t*) packet.data)[0];
 
-            pumpOutput = data;
 
-            feedWatchdog();
+
+
             break;
         }
 
@@ -89,24 +156,11 @@ void loop() {
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
 
-            ScoopZ.overrideForwardHardLimit(data & (1<<5));
-            ScoopZ.overrideReverseHardLimit(data & (1<<4));
-            ScoopX.overrideReverseHardLimit(data & (1<<3));
-            ScoopX.overrideForwardHardLimit(data & (1<<2));
-            ScienceZ.overrideForwardHardLimit(data & (1<<1));
-            ScienceZ.overrideReverseHardLimit(data & (1<<0));
+            ScoopAxis.overrideForwardHardLimit(data & (1<<0));
+            ScoopAxis.overrideReverseHardLimit(data & (1<<1));
+            SensorAxis.overrideForwardHardLimit(data & (1<<2));
+            SensorAxis.overrideReverseHardLimit(data & (1<<3));
             
-            break;
-        }
-
-        // Open loop control of microscope
-        case RC_SCIENCEACTUATIONBOARD_MICROSCOPEFOCUS_DATA_ID:
-        {
-            int16_t data = ((int16_t*) packet.data)[0];
-
-            decipercents[3] = data;
-
-            feedWatchdog();
             break;
         }
 
@@ -116,35 +170,48 @@ void loop() {
     bool direction = digitalRead(DIR_SW);
 
     
-    // ScoopX
-    if (digitalRead(MOTOR_SW_1)) ScoopX.drive((direction ? -900 : 900));
-    else ScoopX.drive(decipercents[0]);
+    // ScoopAxis
+    if (digitalRead(SW1)) ScoopAxis.drive((direction ? -900 : 900));
+    else ScoopAxis.drive(ScoopAxisDecipercent);
         
-    // ScoopZ
-    if (digitalRead(MOTOR_SW_2)) ScoopZ.drive((direction ? -900 : 900));
-    else ScoopZ.drive(decipercents[1]);
-    
+    // SensorAxis
+    if (digitalRead(SW2)) SensorAxis.drive((direction ? -900 : 900));
+    else SensorAxis.drive(SensorAxisDecipercent);
+
+    // Auger
+    if (digitalRead(SW3)) Auger.drive((direction ? -900 : 900));
+    else Auger.drive(AugerDecipercent);
+
+    // Spare Motor Port
+    if (digitalRead(SW4)) Motor4.drive((direction ? -900 : 900));
+    else Motor4.drive(0);
+
     // Spare Servos
-    if (digitalRead(SERVO_SW_3)) Servo3.write((direction? 0 : 180));
-    else Servo3.write(90);
+    if (digitalRead(SW5)) Servo1.write((direction? 0 : 180));
+    else Servo1.write(90);
     
-    if (digitalRead(SERVO_SW_4)) Servo4.write((direction? 0 : 180));
-    else Servo4.write(90);
+    if (digitalRead(SW6)) Servo2.write((direction? 0 : 180));
+    else Servo2.write(90);
+    
 }
 
 
 void telemetry() {
     float positions[2] = { Encoder1.readDegrees(), Encoder2.readDegrees() };
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENCODERPOSITIONS_DATA_COUNT, positions);
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_COUNT, positions);
 
-    uint8_t limitSwitchValues = (ScoopZ.atForwardHardLimit() << 5) | (ScoopZ.atReverseHardLimit() << 4) | (ScoopX.atReverseHardLimit() << 3) 
-                                | (ScoopX.atForwardHardLimit() << 2) | (ScienceZ.atForwardHardLimit() << 1) | (ScienceZ.atReverseHardLimit() << 0);
+    uint8_t limitSwitchValues = (ScoopAxis.atForwardHardLimit() << 0) | (ScoopAxis.atReverseHardLimit() << 1) | (SensorAxis.atForwardHardLimit() << 2) | (SensorAxis.atReverseHardLimit() << 3);
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 }
 
 
 void estop() {
-
+    ScoopAxis.drive(0);
+    SensorAxis.drive(0);
+    Auger.drive(0);
+    ScoopAxisDecipercent = 0;
+    SensorAxisDecipercent = 0;
+    AugerDecipercent = 0;
 }
 
 void feedWatchdog() {
