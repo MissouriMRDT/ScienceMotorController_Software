@@ -52,9 +52,9 @@ LimitSwitch LS5(LIMITSWITCH5);
 LimitSwitch LS6(LIMITSWITCH6);
 
 // Encoders
-RoveQuadEncoder Encoder1(ENCODER_1A, ENCODER_1B, 1);
-RoveQuadEncoder Encoder2(ENCODER_2A, ENCODER_2B, 1);
-RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 1);
+RoveQuadEncoder Encoder1(ENCODER_1A, ENCODER_1B, 360);
+RoveQuadEncoder Encoder2(ENCODER_2A, ENCODER_2B, 360);
+RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 360);
 
 // Joints
 RoveJoint ScoopAxis(&Motor1);

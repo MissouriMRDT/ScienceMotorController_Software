@@ -42,6 +42,7 @@ void setup() {
 
     ScoopAxis.attachEncoder(&Encoder1);
     SensorAxis.attachEncoder(&Encoder2);
+    Proboscis.attachEncoder(&Encoder3);
 
     Motor1.configMaxOutputs(-900, 900);
     Motor2.configMaxOutputs(-900, 900);
@@ -51,7 +52,7 @@ void setup() {
     Motor2.configMinOutputs(0, 0);
     Motor3.configMinOutputs(0, 0);
 
-    Servo1.attach(SERVO_1, 500, 2500);
+    //Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2, 500, 2500);
 
     EnvSensor.begin();
@@ -185,8 +186,8 @@ void loop() {
     else Auger.drive(AugerDecipercent);
 
     // Spare Servos
-    if (digitalRead(SW5)) Servo1.write((direction? 0 : 180));
-    else Servo1.write(90);
+    //if (digitalRead(SW5)) Servo1.write((direction? 0 : 180));
+    //else Servo1.write(90);
     
     if (digitalRead(SW6)) Servo2.write((direction? 0 : 180));
     else Servo2.write(90);
