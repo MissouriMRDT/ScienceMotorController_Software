@@ -53,4 +53,15 @@
 #define PUMP1    27
 #define PUMP2    26
 
+// Heaters
+#define HEATER_ON1      20
+#define HEATER_ON2      9
+#define HEATER_ON3      11
+#define HEATER_ON4      28
+
+#define HEATER_TEMP1    19
+#define HEATER_TEMP2    10
+#define HEATER_TEMP3    12
+#define HEATER_TEMP4    33
+
 #endif

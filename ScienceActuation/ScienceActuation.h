@@ -11,6 +11,7 @@
 #include <RoveJoint.h>
 
 #include <Servo.h>
+#include <AM2302-Sensor.h>
 
 #include <cstdint>
 
@@ -22,6 +23,8 @@ EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_TCP_PORT);
 // Watchdog declarations
 #define WATCHDOG_TIMEOUT 300000
 IntervalTimer Watchdog;
+uint8_t watchdogStatus = 0;
+uint8_t watchdogOverride = 0;
 
 #define TELEMETRY_PERIOD 150000
 IntervalTimer Telemetry;
@@ -31,6 +34,8 @@ IntervalTimer Telemetry;
 // Servos
 Servo Servo1, Servo2;
 
+// Sensors
+AM2302::AM2302_Sensor EnvSensor{SERVO_1};
 
 // Motors
 RoveHBridge Motor1(MOCO1_FWD, MOCO1_RVS);
@@ -54,11 +59,15 @@ RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 1);
 // Joints
 RoveJoint ScoopAxis(&Motor1);
 RoveJoint SensorAxis(&Motor2);
-#define Auger Motor3
+RoveJoint Proboscis(&Motor3);
+#define Auger Motor4
 
+// Control variables
 int16_t ScoopAxisDecipercent = 0;
 int16_t SensorAxisDecipercent = 0;
+int16_t ProboscisDecipercent = 0;
 int16_t AugerDecipercent = 0;
+
 
 // Methods
 void telemetry();
