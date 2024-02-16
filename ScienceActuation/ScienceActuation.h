@@ -62,11 +62,14 @@ RoveJoint SensorAxis(&Motor2);
 RoveJoint Proboscis(&Motor3);
 #define Auger Motor4
 
+#define Microscope Servo2
+
 // Control variables
 int16_t ScoopAxisDecipercent = 0;
 int16_t SensorAxisDecipercent = 0;
 int16_t ProboscisDecipercent = 0;
 int16_t AugerDecipercent = 0;
+uint8_t MicroscopePosition = 90;
 
 
 // Methods

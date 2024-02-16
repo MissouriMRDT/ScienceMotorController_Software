@@ -31,6 +31,7 @@ void setup() {
     Motor1.configInvert(false);
     Motor2.configInvert(false);
     Motor3.configInvert(false);
+    Motor4.configInvert(false);
 
     Encoder1.configInvert(false);
     Encoder2.configInvert(false);
@@ -47,10 +48,12 @@ void setup() {
     Motor1.configMaxOutputs(-900, 900);
     Motor2.configMaxOutputs(-900, 900);
     Motor3.configMaxOutputs(-900, 900);
+    Motor4.configMaxOutputs(-900, 900);
 
     Motor1.configMinOutputs(0, 0);
     Motor2.configMinOutputs(0, 0);
     Motor3.configMinOutputs(0, 0);
+    Motor4.configMinOutputs(0, 0);
 
     //Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2, 500, 2500);
@@ -142,10 +145,8 @@ void loop() {
 
         case RC_SCIENCEACTUATIONBOARD_MICROSCOPE_DATA_ID:
         {
-
-
-
-
+            MicroscopePosition = *((uint8_t*) packet.data);
+            
             break;
         }
 
@@ -184,13 +185,10 @@ void loop() {
     // Auger
     if (digitalRead(SW4)) Auger.drive((direction ? -900 : 900));
     else Auger.drive(AugerDecipercent);
-
-    // Spare Servos
-    //if (digitalRead(SW5)) Servo1.write((direction? 0 : 180));
-    //else Servo1.write(90);
     
-    if (digitalRead(SW6)) Servo2.write((direction? 0 : 180));
-    else Servo2.write(90);
+    // Microscope
+    if (digitalRead(SW6)) Microscope.write((direction? 0 : 180));
+    else Microscope.write(MicroscopePosition);
     
 }
 
