@@ -41,9 +41,9 @@ void setup() {
     Encoder2.begin([]{ Encoder2.handleInterrupt(); });
     Encoder3.begin([]{ Encoder3.handleInterrupt(); });
 
-    ScoopAxis.attachEncoder(&Encoder1);
-    SensorAxis.attachEncoder(&Encoder2);
-    Proboscis.attachEncoder(&Encoder3);
+    //ScoopAxis.attachEncoder(&Encoder1);
+    //SensorAxis.attachEncoder(&Encoder2);
+    //Proboscis.attachEncoder(&Encoder3);
 
     Motor1.configMaxOutputs(-900, 900);
     Motor2.configMaxOutputs(-900, 900);
