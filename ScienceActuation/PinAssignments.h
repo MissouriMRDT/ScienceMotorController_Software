@@ -35,7 +35,7 @@
 #define LIMITSWITCH6    35
 
 // Manual Switch Pins
-#define DIR_SW    12
+#define DIR_SW    17
 
 // Motor Button pins
 #define SW1    2

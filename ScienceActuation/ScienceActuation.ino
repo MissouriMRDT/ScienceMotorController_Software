@@ -9,14 +9,14 @@ void setup() {
     pinMode(SW4, INPUT);
     pinMode(SW5, INPUT);
     pinMode(SW6, INPUT);
-    pinMode(SW7, INPUT);
-    pinMode(SW8, INPUT);
+    //pinMode(SW7, INPUT);
+    //pinMode(SW8, INPUT);
     pinMode(DIR_SW, INPUT);
 
-    pinMode(PUMP1, OUTPUT);
-    pinMode(PUMP2, OUTPUT);
-    digitalWrite(PUMP1, LOW);
-    digitalWrite(PUMP2, LOW);
+    //pinMode(PUMP1, OUTPUT);
+    //pinMode(PUMP2, OUTPUT);
+    //digitalWrite(PUMP1, LOW);
+    //digitalWrite(PUMP2, LOW);
 
     ScoopAxis.attachHardLimits(&LS1, &LS2);
     SensorAxis.attachHardLimits(&LS3, &LS4);
