@@ -41,7 +41,7 @@ void setup() {
     Encoder2.begin([]{ Encoder2.handleInterrupt(); });
     Encoder3.begin([]{ Encoder3.handleInterrupt(); });
 
-    //ScoopAxis.attachEncoder(&Encoder1);
+    //AugerAxis.attachEncoder(&Encoder1);
     //SensorAxis.attachEncoder(&Encoder2);
     //Proboscis.attachEncoder(&Encoder3);
 
@@ -58,7 +58,7 @@ void setup() {
     //Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2, 500, 2500);
 
-    EnvSensor.begin();
+
 
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
     Telemetry.begin(telemetry, TELEMETRY_PERIOD);
@@ -170,7 +170,7 @@ void loop() {
     bool direction = digitalRead(DIR_SW);
 
     
-    // ScoopAxis
+    // AugerAxis
     if (digitalRead(SW1)) ScoopAxis.drive((direction ? -900 : 900));
     else ScoopAxis.drive(ScoopAxisDecipercent);
         

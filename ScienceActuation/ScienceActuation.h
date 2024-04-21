@@ -11,7 +11,6 @@
 #include <RoveJoint.h>
 
 #include <Servo.h>
-#include <AM2302-Sensor.h>
 
 #include <cstdint>
 
@@ -34,9 +33,6 @@ IntervalTimer Telemetry;
 // Servos
 Servo Servo1, Servo2;
 
-// Sensors
-AM2302::AM2302_Sensor EnvSensor{SERVO_1};
-
 // Motors
 RoveHBridge Motor1(MOCO1_FWD, MOCO1_RVS);
 RoveHBridge Motor2(MOCO2_FWD, MOCO2_RVS);
@@ -57,7 +53,7 @@ RoveQuadEncoder Encoder2(ENCODER_2A, ENCODER_2B, 360);
 RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 360);
 
 // Joints
-RoveJoint ScoopAxis(&Motor4);
+RoveJoint ScoopAxis(&Motor4); 
 RoveJoint SensorAxis(&Motor2);
 RoveJoint Proboscis(&Motor3);
 #define Auger Motor1
