@@ -21,39 +21,34 @@ void setup() {
     ScoopAxis.attachHardLimits(&LS1, &LS2);
     SensorAxis.attachHardLimits(&LS3, &LS4);
 
-    LS1.configInvert(false);
-    LS2.configInvert(false);
-    LS3.configInvert(false);
-    LS4.configInvert(false);
-    LS5.configInvert(false);
-    LS6.configInvert(false);
+    ScoopAxis.ForwardHardLimit()->configInvert(false);
+    ScoopAxis.ReverseHardLimit()->configInvert(false);
 
-    Motor1.configInvert(false);
-    Motor2.configInvert(false);
-    Motor3.configInvert(false);
-    Motor4.configInvert(false);
+    SensorAxis.ForwardHardLimit()->configInvert(false);
+    SensorAxis.ReverseHardLimit()->configInvert(false);
 
-    Encoder1.configInvert(false);
-    Encoder2.configInvert(false);
-    Encoder3.configInvert(false);
+    ScoopAxis.LimitSwitch()->configInvert(false);
+    SensorAxis.LimitSwitch()->configInvert(false);
+
+    ScoopAxis.Motor()->configInvert(false);
+    SensorAxis.Motor()->configInvert(false);
+
+    ScoopAxis.Encoder()->configInvert(false);
+    SensorAxis.Encoder()->configInvert(false);
 
     Encoder1.begin([]{ Encoder1.handleInterrupt(); });
     Encoder2.begin([]{ Encoder2.handleInterrupt(); });
     Encoder3.begin([]{ Encoder3.handleInterrupt(); });
 
+    ScoopAxis.Motor()->configMaxOutputs(-900, 900);
+    SensorAxis.Motor()->configMaxOutputs(-900, 900);
+
+    ScoopAxis.Motor()->configMinOutputs(0,0);
+    SensorAxis.Motor()->configMinOutputs(0,0);
+
     //AugerAxis.attachEncoder(&Encoder1);
     //SensorAxis.attachEncoder(&Encoder2);
     //Proboscis.attachEncoder(&Encoder3);
-
-    Motor1.configMaxOutputs(-900, 900);
-    Motor2.configMaxOutputs(-900, 900);
-    Motor3.configMaxOutputs(-900, 900);
-    Motor4.configMaxOutputs(-900, 900);
-
-    Motor1.configMinOutputs(0, 0);
-    Motor2.configMinOutputs(0, 0);
-    Motor3.configMinOutputs(0, 0);
-    Motor4.configMinOutputs(0, 0);
 
     //Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2, 500, 2500);

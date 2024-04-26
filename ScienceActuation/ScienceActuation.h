@@ -55,7 +55,6 @@ RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 360);
 // Joints
 RoveJoint ScoopAxis(&Motor4); 
 RoveJoint SensorAxis(&Motor2);
-RoveJoint Proboscis(&Motor3);
 #define Auger Motor1
 
 #define Microscope Servo2
@@ -63,7 +62,6 @@ RoveJoint Proboscis(&Motor3);
 // Control variables
 int16_t ScoopAxisDecipercent = 0;
 int16_t SensorAxisDecipercent = 0;
-int16_t ProboscisDecipercent = 0;
 int16_t AugerDecipercent = 0;
 uint8_t MicroscopePosition = 90;
 
