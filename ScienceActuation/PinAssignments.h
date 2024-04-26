@@ -3,8 +3,8 @@
 
 
 // Motor Pins
-#define MOCO1_FWD    32
-#define MOCO1_RVS    31
+#define MOCO1_FWD    29 // mag wire
+#define MOCO1_RVS    28 // mag wire
 #define MOCO2_FWD    9
 #define MOCO2_RVS    8
 #define MOCO3_FWD    11
