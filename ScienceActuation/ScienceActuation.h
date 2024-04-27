@@ -25,7 +25,7 @@ IntervalTimer Watchdog;
 uint8_t watchdogStatus = 0;
 uint8_t watchdogOverride = 0;
 
-#define TELEMETRY_PERIOD 150000
+#define TELEMETRY_PERIOD 300000
 IntervalTimer Telemetry;
 
 
@@ -53,11 +53,12 @@ RoveQuadEncoder Encoder2(ENCODER_2A, ENCODER_2B, 360);
 RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 360);
 
 // Joints
-RoveJoint ScoopAxis(&Motor4); 
-RoveJoint SensorAxis(&Motor2);
-#define Auger Motor1
-
+RoveJoint ScoopAxis(&Motor2); 
+RoveJoint SensorAxis(&Motor3);
+#define Auger Motor4
+#define SpareMotor Motor1
 #define Microscope Servo2
+#define SpareServo Servo1
 
 // Control variables
 int16_t ScoopAxisDecipercent = 0;

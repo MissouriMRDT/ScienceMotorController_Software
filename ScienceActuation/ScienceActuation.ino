@@ -3,12 +3,12 @@
 void setup() {
     Serial.begin(115200);
 
-    pinMode(SW1, INPUT);
-    pinMode(SW2, INPUT);
-    pinMode(SW3, INPUT);
-    pinMode(SW4, INPUT);
-    pinMode(SW5, INPUT);
-    pinMode(SW6, INPUT);
+    pinMode(SW1, INPUT_PULLUP);
+    pinMode(SW2, INPUT_PULLUP);
+    pinMode(SW3, INPUT_PULLUP);
+    pinMode(SW4, INPUT_PULLUP);
+    pinMode(SW5, INPUT_PULLUP);
+    pinMode(SW6, INPUT_PULLUP);
     //pinMode(SW7, INPUT);
     //pinMode(SW8, INPUT);
     pinMode(DIR_SW, INPUT);
@@ -18,20 +18,24 @@ void setup() {
     //digitalWrite(PUMP1, LOW);
     //digitalWrite(PUMP2, LOW);
 
+
+    ScoopAxis.attachEncoder(&Encoder1);
+    SensorAxis.attachEncoder(&Encoder2);
+
     ScoopAxis.attachHardLimits(&LS1, &LS2);
-    SensorAxis.attachHardLimits(&LS3, &LS4);
+    SensorAxis.attachHardLimits(&LS6, &LS3);
 
     ScoopAxis.ForwardHardLimit()->configInvert(false);
     ScoopAxis.ReverseHardLimit()->configInvert(false);
+    ScoopAxis.Motor()->configRampRate(5000);
 
     SensorAxis.ForwardHardLimit()->configInvert(false);
     SensorAxis.ReverseHardLimit()->configInvert(false);
-
-    ScoopAxis.LimitSwitch()->configInvert(false);
-    SensorAxis.LimitSwitch()->configInvert(false);
+    SensorAxis.Motor()->configRampRate(5000);
 
     ScoopAxis.Motor()->configInvert(false);
     SensorAxis.Motor()->configInvert(false);
+    Auger.configRampRate(5000);
 
     ScoopAxis.Encoder()->configInvert(false);
     SensorAxis.Encoder()->configInvert(false);
@@ -40,28 +44,24 @@ void setup() {
     Encoder2.begin([]{ Encoder2.handleInterrupt(); });
     Encoder3.begin([]{ Encoder3.handleInterrupt(); });
 
-    ScoopAxis.Motor()->configMaxOutputs(-900, 900);
-    SensorAxis.Motor()->configMaxOutputs(-900, 900);
+    ScoopAxis.Motor()->configMaxOutputs(-1000, 1000);
+    SensorAxis.Motor()->configMaxOutputs(-1000, 1000);
 
     ScoopAxis.Motor()->configMinOutputs(0,0);
     SensorAxis.Motor()->configMinOutputs(0,0);
 
-    //AugerAxis.attachEncoder(&Encoder1);
-    //SensorAxis.attachEncoder(&Encoder2);
-    //Proboscis.attachEncoder(&Encoder3);
 
-    //Servo1.attach(SERVO_1, 500, 2500);
+    Servo1.attach(SERVO_1, 500, 2500);
     Servo2.attach(SERVO_2, 500, 2500);
 
 
-
+    Serial.println("RoveComm Initializing...");
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
     Telemetry.begin(telemetry, TELEMETRY_PERIOD);
+    Serial.println("Complete");
 }
 
 void loop() {
-    EnvSensor.read();
-
     // Parse RoveComm packets
     rovecomm_packet packet = RoveComm.read();
     switch (packet.data_id) {
@@ -145,14 +145,6 @@ void loop() {
             break;
         }
 
-        case RC_SCIENCEACTUATIONBOARD_PROBOSCIS_DATA_ID:
-        {
-            ProboscisDecipercent = *((int16_t*) packet.data);
-            feedWatchdog();
-
-            break;
-        }
-
         case RC_SCIENCEACTUATIONBOARD_WATCHDOGOVERRIDE_DATA_ID:
         {
             watchdogOverride = *((uint8_t*) packet.data);
@@ -166,23 +158,27 @@ void loop() {
 
     
     // AugerAxis
-    if (digitalRead(SW1)) ScoopAxis.drive((direction ? -900 : 900));
+    if (!digitalRead(SW4)) ScoopAxis.drive((direction ? -900 : 900));
     else ScoopAxis.drive(ScoopAxisDecipercent);
         
     // SensorAxis
-    if (digitalRead(SW2)) SensorAxis.drive((direction ? -900 : 900));
+    if (!digitalRead(SW2)) SensorAxis.drive((direction ? -900 : 900));
     else SensorAxis.drive(SensorAxisDecipercent);
 
-    // Proboscis
-    if (digitalRead(SW3)) Proboscis.drive((direction ? -900 : 900));
-    else Proboscis.drive(ProboscisDecipercent);
-
     // Auger
-    if (digitalRead(SW4)) Auger.drive((direction ? -900 : 900));
+    if (!digitalRead(SW1)) Auger.drive((direction ? -900 : 900));
     else Auger.drive(AugerDecipercent);
+
+     // Spare Motor
+    if (!digitalRead(SW5)) SpareMotor.drive((direction ? -900 : 900));
+    else SpareMotor.drive(0);
+
+    // Microscope
+    if (!digitalRead(SW6)) SpareServo.write((direction? 0 : 180));
+    else SpareServo.write(90);
     
     // Microscope
-    if (digitalRead(SW6)) Microscope.write((direction? 0 : 180));
+    if (!digitalRead(SW3)) Microscope.write((direction? 0 : 180));
     else Microscope.write(MicroscopePosition);
     
 }
@@ -198,7 +194,7 @@ void telemetry() {
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 
     // Temp and humidity
-    float envData[2] = { EnvSensor.get_Temperature(), EnvSensor.get_Humidity() };
+    float envData[2] = { 0, 0 };
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_COUNT, envData);
 
     // Watchdog status
@@ -212,12 +208,10 @@ void estop() {
     if (!watchdogOverride) {
         ScoopAxis.drive(0);
         SensorAxis.drive(0);
-        Proboscis.drive(0);
         Auger.drive(0);
 
         ScoopAxisDecipercent = 0;
         SensorAxisDecipercent = 0;
-        ProboscisDecipercent = 0;
         AugerDecipercent = 0;
     }
 }
