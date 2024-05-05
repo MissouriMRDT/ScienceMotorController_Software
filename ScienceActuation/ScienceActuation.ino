@@ -194,7 +194,9 @@ void telemetry() {
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 
     // Temp and humidity
-    float envData[2] = { 0, 0 };
+    float temp = analogRead(TEMP);
+    float humidity = analogRead(HUMIDITY);
+    float envData[2] = { temp, humidity };
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_COUNT, envData);
 
     // Watchdog status
