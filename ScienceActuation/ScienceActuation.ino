@@ -18,7 +18,6 @@ void setup() {
     //digitalWrite(PUMP1, LOW);
     //digitalWrite(PUMP2, LOW);
 
-
     ScoopAxis.attachEncoder(&Encoder1);
     SensorAxis.attachEncoder(&Encoder2);
 
@@ -50,10 +49,11 @@ void setup() {
     ScoopAxis.Motor()->configMinOutputs(0,0);
     SensorAxis.Motor()->configMinOutputs(0,0);
 
+    GimbalTilt.attach(SERVO_1);
+    GimbalPan.attach(SERVO_2);
 
-    Servo1.attach(SERVO_1, 500, 2500);
-    Servo2.attach(SERVO_2, 500, 2500);
-
+    GimbalTilt.write(GimbalTiltPosition);
+    GimbalPan.write(GimbalPanPosition);
 
     Serial.println("RoveComm Initializing...");
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
@@ -138,12 +138,14 @@ void loop() {
             break;
         }
 
+        /*
         case RC_SCIENCEACTUATIONBOARD_MICROSCOPE_DATA_ID:
         {
             MicroscopePosition = *((uint8_t*) packet.data);
             
             break;
         }
+        */
 
         case RC_SCIENCEACTUATIONBOARD_WATCHDOGOVERRIDE_DATA_ID:
         {
@@ -151,6 +153,13 @@ void loop() {
 
             break;
         }
+        //increment science pan and tilt gimbals by (-180, 180)
+        case RC_SCIENCEACTUATIONBOARD_SCIENCEGIMBALINCREMENT_DATA_ID:
+            Serial.write("moving Gimbal");
+            int16_t* data = (int16_t*) packet.data;
+            GimbalPan.target += data[0];
+            GimbalTilt.target += data[1];
+            break;
     }
 
 
@@ -173,14 +182,16 @@ void loop() {
     if (!digitalRead(SW5)) SpareMotor.drive((direction ? -900 : 900));
     else SpareMotor.drive(0);
 
-    // Microscope
-    if (!digitalRead(SW6)) SpareServo.write((direction? 0 : 180));
-    else SpareServo.write(90);
+    // Pan Gimbal
+    if (!digitalRead(SW6)) GimbalPan.write((direction? 0 : 180));
+    else GimbalPan.write((GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN);
     
-    // Microscope
-    if (!digitalRead(SW3)) Microscope.write((direction? 0 : 180));
-    else Microscope.write(MicroscopePosition);
-    
+    // Tilt Gimbal
+    if (!digitalRead(SW3)) GimbalTilt.write((direction? 0 : 180));
+    else GimbalTilt.write((GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN);
+
+    GimbalPan.write();
+    GimbalTilt.write();
 }
 
 
@@ -193,14 +204,12 @@ void telemetry() {
     uint8_t limitSwitchValues = (ScoopAxis.atForwardHardLimit() << 0) | (ScoopAxis.atReverseHardLimit() << 1) | (SensorAxis.atForwardHardLimit() << 2) | (SensorAxis.atReverseHardLimit() << 3);
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 
-    // Temp and humidity
-    float temp = analogRead(TEMP);
+    // humidity
     float humidity = analogRead(HUMIDITY);
-    float envData[2] = { temp, humidity };
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_ID, RC_SCIENCEACTUATIONBOARD_ENVIRONMENTALDATA_DATA_COUNT, envData);
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, &humidity);
 
     // Watchdog status
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_ID, RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_COUNT, watchdogStatus);
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_ID, RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_COUNT, &watchdogStatus);
 }
 
 

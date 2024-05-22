@@ -2,6 +2,7 @@
 #define SCIENCEACTUATION_H
 
 #include "PinAssignments.h"
+#include "CachedServo.h"
 
 #include <RoveComm.h>
 #include <RoveHBridge.h>
@@ -14,6 +15,11 @@
 
 #include <cstdint>
 
+// Gimbal Servo Max/Mins
+#define GIMBAL_TILT_MIN     0
+#define GIMBAL_TILT_MAX     200
+#define GIMBAL_PAN_MIN      0
+#define GIMBAL_PAN_MAX      200
 
 // RoveComm declarations
 RoveCommEthernet RoveComm;
@@ -28,10 +34,9 @@ uint8_t watchdogOverride = 0;
 #define TELEMETRY_PERIOD 300000
 IntervalTimer Telemetry;
 
-
-
 // Servos
-Servo Servo1, Servo2;
+CachedServo GimbalTilt(90, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
+CachedServo GimbalPan(90, GIMBAL_PAN_MIN, GIMBAL_PAN_MAX);
 
 // Motors
 RoveHBridge Motor1(MOCO1_FWD, MOCO1_RVS);
@@ -57,14 +62,13 @@ RoveJoint ScoopAxis(&Motor2);
 RoveJoint SensorAxis(&Motor3);
 #define Auger Motor4
 #define SpareMotor Motor1
-#define Microscope Servo2
-#define SpareServo Servo1
 
 // Control variables
 int16_t ScoopAxisDecipercent = 0;
 int16_t SensorAxisDecipercent = 0;
 int16_t AugerDecipercent = 0;
-uint8_t MicroscopePosition = 90;
+uint8_t GimbalPanPosition = (GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN;
+uint8_t GimbalTiltPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN;
 
 
 // Methods
