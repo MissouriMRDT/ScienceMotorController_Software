@@ -63,6 +63,7 @@ void setup() {
 
 void loop() {
     // Parse RoveComm packets
+
     rovecomm_packet packet = RoveComm.read();
     switch (packet.data_id) {
 
@@ -183,12 +184,10 @@ void loop() {
     else SpareMotor.drive(0);
 
     // Pan Gimbal
-    if (!digitalRead(SW6)) GimbalPan.write((direction? 0 : 180));
-    else GimbalPan.write((GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN);
+    if (!digitalRead(SW6)) GimbalPan.target +=((direction? -10 : 10));
     
     // Tilt Gimbal
-    if (!digitalRead(SW3)) GimbalTilt.write((direction? 0 : 180));
-    else GimbalTilt.write((GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN);
+    if (!digitalRead(SW3)) GimbalTilt.target +=((direction? -10 : 10));
 
     GimbalPan.write();
     GimbalTilt.write();

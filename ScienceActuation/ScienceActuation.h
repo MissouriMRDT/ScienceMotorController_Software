@@ -16,10 +16,10 @@
 #include <cstdint>
 
 // Gimbal Servo Max/Mins
-#define GIMBAL_TILT_MIN     0
-#define GIMBAL_TILT_MAX     200
-#define GIMBAL_PAN_MIN      0
-#define GIMBAL_PAN_MAX      200
+#define GIMBAL_TILT_MIN     45
+#define GIMBAL_TILT_MAX     135
+#define GIMBAL_PAN_MIN      40
+#define GIMBAL_PAN_MAX      180
 
 // RoveComm declarations
 RoveCommEthernet RoveComm;
