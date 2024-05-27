@@ -85,37 +85,21 @@ void loop() {
 
         case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_SETPOSITION_DATA_ID:
         {
-
-
-
-
             break;
         }
 
         case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_SETPOSITION_DATA_ID:
         {
-
-
-
-
             break;
         }
 
         case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_INCREMENTPOSITION_DATA_ID:
         {
-
-
-
-
             break;
         }
 
         case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_INCREMENTPOSITION_DATA_ID:
         {
-
-
-
-
             break;
         }
 
@@ -156,11 +140,21 @@ void loop() {
         }
         //increment science pan and tilt gimbals by (-180, 180)
         case RC_SCIENCEACTUATIONBOARD_SCIENCEGIMBALINCREMENT_DATA_ID:
-            Serial.write("moving Gimbal");
+        {
+            //Serial.write("moving Gimbal");
             int16_t* data = (int16_t*) packet.data;
             GimbalPan.target += data[0];
             GimbalTilt.target += data[1];
             break;
+        }
+        
+        case RC_SCIENCEACTUATIONBOARD_REQUESTHUMIDITY_DATA_ID:
+        {
+            // humidity
+            float humidity = analogMap(analogRead(HUMIDITY), HUMIDITY_ADC_MIN, HUMIDITY_ADC_MAX, HUMIDITY_MAPPED_MIN, HUMIDITY_MAPPED_MAX);
+            RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, humidity);
+            break;
+        }
     }
 
 
@@ -193,8 +187,13 @@ void loop() {
     GimbalTilt.write();
 }
 
+float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fromAnalog, float toAnalog) {
+  float slope = (toAnalog - fromAnalog) / (toADC - fromADC);
+  return (measurement - fromADC) * slope + fromAnalog;
+}
 
 void telemetry() {
+    map()
     // Encoder positions
     float positions[2] = { Encoder1.readDegrees(), Encoder2.readDegrees() };
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_COUNT, positions);
@@ -203,12 +202,8 @@ void telemetry() {
     uint8_t limitSwitchValues = (ScoopAxis.atForwardHardLimit() << 0) | (ScoopAxis.atReverseHardLimit() << 1) | (SensorAxis.atForwardHardLimit() << 2) | (SensorAxis.atReverseHardLimit() << 3);
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 
-    // humidity
-    float humidity = analogRead(HUMIDITY);
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, &humidity);
-
     // Watchdog status
-    RoveComm.write(RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_ID, RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_COUNT, &watchdogStatus);
+    RoveComm.write(RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_ID, RC_SCIENCEACTUATIONBOARD_WATCHDOGSTATUS_DATA_COUNT, watchdogStatus);
 }
 
 

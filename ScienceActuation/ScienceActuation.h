@@ -21,6 +21,11 @@
 #define GIMBAL_PAN_MIN      40
 #define GIMBAL_PAN_MAX      180
 
+#define HUMIDITY_ADC_MIN        10
+#define HUMIDITY_ADC_MAX        972
+#define HUMIDITY_MAPPED_MIN     100.0
+#define HUMIDITY_MAPPED_MAX     0.0
+
 // RoveComm declarations
 RoveCommEthernet RoveComm;
 EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_TCP_PORT);
@@ -72,6 +77,7 @@ uint8_t GimbalTiltPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN
 
 
 // Methods
+float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fromAnalog, float toAnalog);
 void telemetry();
 void estop();
 void feedWatchdog();
