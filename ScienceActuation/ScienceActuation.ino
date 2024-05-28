@@ -13,47 +13,31 @@ void setup() {
     //pinMode(SW8, INPUT);
     pinMode(DIR_SW, INPUT);
 
-    //pinMode(PUMP1, OUTPUT);
-    //pinMode(PUMP2, OUTPUT);
-    //digitalWrite(PUMP1, LOW);
-    //digitalWrite(PUMP2, LOW);
+    AugerAxis.attachEncoder(&EncoderAugerAxis);
+    SensorAxis.attachEncoder(&EncoderSensorAxis);
 
-    ScoopAxis.attachEncoder(&Encoder1);
-    SensorAxis.attachEncoder(&Encoder2);
+    AugerAxis.attachHardLimits(&LimitAugerAxisRVS, &LimitAugerAxisFWD);
+    SensorAxis.attachHardLimits(&LimitSensorAxisRVS, &LimitSensorOrLaserFWD);
 
-    ScoopAxis.attachHardLimits(&LS1, &LS2);
-    SensorAxis.attachHardLimits(&LS6, &LS3);
-
-    ScoopAxis.ForwardHardLimit()->configInvert(false);
-    ScoopAxis.ReverseHardLimit()->configInvert(false);
-    ScoopAxis.Motor()->configRampRate(5000);
-
-    SensorAxis.ForwardHardLimit()->configInvert(false);
-    SensorAxis.ReverseHardLimit()->configInvert(false);
+    AugerAxis.Motor()->configRampRate(5000);
     SensorAxis.Motor()->configRampRate(5000);
-
-    ScoopAxis.Motor()->configInvert(false);
-    SensorAxis.Motor()->configInvert(false);
     Auger.configRampRate(5000);
 
-    ScoopAxis.Encoder()->configInvert(false);
-    SensorAxis.Encoder()->configInvert(false);
+    EncoderAugerAxis.begin([]{ EncoderAugerAxis.handleInterrupt(); });
+    EncoderAuger.begin([]{ EncoderAuger.handleInterrupt(); });
+    EncoderSensorAxis.begin([]{ EncoderSensorAxis.handleInterrupt(); });
 
-    Encoder1.begin([]{ Encoder1.handleInterrupt(); });
-    Encoder2.begin([]{ Encoder2.handleInterrupt(); });
-    Encoder3.begin([]{ Encoder3.handleInterrupt(); });
-
-    ScoopAxis.Motor()->configMaxOutputs(-1000, 1000);
+    AugerAxis.Motor()->configMaxOutputs(-1000, 1000);
     SensorAxis.Motor()->configMaxOutputs(-1000, 1000);
 
-    ScoopAxis.Motor()->configMinOutputs(0,0);
+    AugerAxis.Motor()->configMinOutputs(0,0);
     SensorAxis.Motor()->configMinOutputs(0,0);
 
-    GimbalTilt.attach(SERVO_1);
-    GimbalPan.attach(SERVO_2);
+    GimbalPan.attach(GIMBAL_PAN_PIN);
+    GimbalTilt.attach(GIMBAL_TILT_PIN);
 
-    GimbalTilt.write(GimbalTiltPosition);
-    GimbalPan.write(GimbalPanPosition);
+    GimbalPan.write(gimbalPanStartPosition);
+    GimbalTilt.write(gimbalTiltStartPosition);
 
     Serial.println("RoveComm Initializing...");
     RoveComm.begin(RC_SCIENCEACTUATIONBOARD_FIRSTOCTET, RC_SCIENCEACTUATIONBOARD_SECONDOCTET, RC_SCIENCEACTUATIONBOARD_THIRDOCTET, RC_SCIENCEACTUATIONBOARD_FOURTHOCTET, &TCPServer);
@@ -69,7 +53,7 @@ void loop() {
 
         case RC_SCIENCEACTUATIONBOARD_SCOOPAXIS_OPENLOOP_DATA_ID:
         {
-            ScoopAxisDecipercent = *((int16_t*) packet.data);
+            augerAxisDecipercent = *((int16_t*) packet.data);
             feedWatchdog();
 
             break;
@@ -77,7 +61,7 @@ void loop() {
         
         case RC_SCIENCEACTUATIONBOARD_SENSORAXIS_OPENLOOP_DATA_ID:
         {
-            SensorAxisDecipercent = *((int16_t*) packet.data);
+            sensorAxisDecipercent = *((int16_t*) packet.data);
             feedWatchdog();
 
             break;
@@ -107,8 +91,8 @@ void loop() {
         {
             uint8_t data = ((uint8_t*) packet.data)[0];
 
-            ScoopAxis.overrideForwardHardLimit(data & (1<<0));
-            ScoopAxis.overrideReverseHardLimit(data & (1<<1));
+            AugerAxis.overrideForwardHardLimit(data & (1<<0));
+            AugerAxis.overrideReverseHardLimit(data & (1<<1));
             SensorAxis.overrideForwardHardLimit(data & (1<<2));
             SensorAxis.overrideReverseHardLimit(data & (1<<3));
             
@@ -117,7 +101,7 @@ void loop() {
 
         case RC_SCIENCEACTUATIONBOARD_AUGER_DATA_ID:
         {
-            AugerDecipercent = *((int16_t*) packet.data);
+            augerDecipercent = *((int16_t*) packet.data);
             feedWatchdog();
 
             break;
@@ -157,21 +141,19 @@ void loop() {
         }
     }
 
-
     bool direction = digitalRead(DIR_SW);
 
-    
     // AugerAxis
-    if (!digitalRead(SW4)) ScoopAxis.drive((direction ? -900 : 900));
-    else ScoopAxis.drive(ScoopAxisDecipercent);
-        
+    if (!digitalRead(SW4)) AugerAxis.drive((direction ? -900 : 900));
+    else AugerAxis.drive(augerAxisDecipercent);
+
     // SensorAxis
     if (!digitalRead(SW2)) SensorAxis.drive((direction ? -900 : 900));
-    else SensorAxis.drive(SensorAxisDecipercent);
+    else SensorAxis.drive(sensorAxisDecipercent);
 
     // Auger
     if (!digitalRead(SW1)) Auger.drive((direction ? -900 : 900));
-    else Auger.drive(AugerDecipercent);
+    else Auger.drive(augerDecipercent);
 
      // Spare Motor
     if (!digitalRead(SW5)) SpareMotor.drive((direction ? -900 : 900));
@@ -193,13 +175,12 @@ float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fr
 }
 
 void telemetry() {
-    map()
     // Encoder positions
-    float positions[2] = { Encoder1.readDegrees(), Encoder2.readDegrees() };
+    float positions[2] = { EncoderAugerAxis.readDegrees(), EncoderSensorAxis.readDegrees() };
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_ID, RC_SCIENCEACTUATIONBOARD_POSITIONS_DATA_COUNT, positions);
 
     // Limit switches
-    uint8_t limitSwitchValues = (ScoopAxis.atForwardHardLimit() << 0) | (ScoopAxis.atReverseHardLimit() << 1) | (SensorAxis.atForwardHardLimit() << 2) | (SensorAxis.atReverseHardLimit() << 3);
+    uint8_t limitSwitchValues = (AugerAxis.atForwardHardLimit() << 0) | (AugerAxis.atReverseHardLimit() << 1) | (SensorAxis.atForwardHardLimit() << 2) | (SensorAxis.atReverseHardLimit() << 3);
     RoveComm.write(RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_ID, RC_SCIENCEACTUATIONBOARD_LIMITSWITCHTRIGGERED_DATA_COUNT, limitSwitchValues);
 
     // Watchdog status
@@ -211,13 +192,13 @@ void estop() {
     watchdogStatus = 1;
 
     if (!watchdogOverride) {
-        ScoopAxis.drive(0);
+        AugerAxis.drive(0);
         SensorAxis.drive(0);
         Auger.drive(0);
 
-        ScoopAxisDecipercent = 0;
-        SensorAxisDecipercent = 0;
-        AugerDecipercent = 0;
+        augerAxisDecipercent = 0;
+        sensorAxisDecipercent = 0;
+        augerDecipercent = 0;
     }
 }
 

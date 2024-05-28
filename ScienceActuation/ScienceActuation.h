@@ -6,12 +6,11 @@
 
 #include <RoveComm.h>
 #include <RoveHBridge.h>
+#include <RoveSwitch.h>
 #include <LimitSwitch.h>
 #include <RoveQuadEncoder.h>
 #include <RovePIDController.h>
 #include <RoveJoint.h>
-
-#include <Servo.h>
 
 #include <cstdint>
 
@@ -40,40 +39,62 @@ uint8_t watchdogOverride = 0;
 IntervalTimer Telemetry;
 
 // Servos
-CachedServo GimbalTilt(90, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
+#define GIMBAL_PAN_PIN SERVO_1
+#define GIMBAL_TILT_PIN SERVO_2
 CachedServo GimbalPan(90, GIMBAL_PAN_MIN, GIMBAL_PAN_MAX);
+CachedServo GimbalTilt(90, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
 
 // Motors
-RoveHBridge Motor1(MOCO1_FWD, MOCO1_RVS);
-RoveHBridge Motor2(MOCO2_FWD, MOCO2_RVS);
-RoveHBridge Motor3(MOCO3_FWD, MOCO3_RVS);
-RoveHBridge Motor4(MOCO4_FWD, MOCO4_RVS);
+RoveHBridge MotorSpare(MOCO1_FWD, MOCO1_RVS);
+RoveHBridge MotorAugerAxis(MOCO2_FWD, MOCO2_RVS);
+RoveHBridge MotorSensorAxis(MOCO3_FWD, MOCO3_RVS);
+RoveHBridge MotorAuger(MOCO4_FWD, MOCO4_RVS);
+
+// cursed af hack
+class CompoundSwitch : public RoveSwitch {
+private:
+    RoveSwitch &m_sw1;
+    RoveSwitch &m_sw2;
+public:
+    CompoundSwitch(RoveSwitch &sw1, RoveSwitch &sw2) : m_sw1(sw1), m_sw2(sw2) {}
+    RoveSwitch &Sw1() const { return m_sw1; }
+    RoveSwitch &Sw1() { return m_sw1; }
+    RoveSwitch &Sw2() const { return m_sw2; }
+    RoveSwitch &Sw2() { return m_sw2; }
+    bool read() const override {
+        return m_sw1.read() || m_sw2.read();
+    }
+};
 
 // Limit Switches
-LimitSwitch LS1(LIMITSWITCH1);
-LimitSwitch LS2(LIMITSWITCH2);
-LimitSwitch LS3(LIMITSWITCH3);
-LimitSwitch LS4(LIMITSWITCH4);
-LimitSwitch LS5(LIMITSWITCH5);
-LimitSwitch LS6(LIMITSWITCH6);
+LimitSwitch LimitSensorAxisRVS(LIMITSWITCH1);
+LimitSwitch LimitAugerAxisFWD(LIMITSWITCH2);
+LimitSwitch LimitSensorAxisFWD(LIMITSWITCH3);
+LimitSwitch LimitSpareRVS(LIMITSWITCH4);
+LimitSwitch LimitLaserFWD(LIMITSWITCH5); // LimitSpareFWD
+LimitSwitch LimitAugerAxisRVS(LIMITSWITCH6);
+
+CompoundSwitch LimitSensorOrLaserFWD(LimitSensorAxisFWD, LimitLaserFWD);
 
 // Encoders
-RoveQuadEncoder Encoder1(ENCODER_1A, ENCODER_1B, 360);
-RoveQuadEncoder Encoder2(ENCODER_2A, ENCODER_2B, 360);
-RoveQuadEncoder Encoder3(ENCODER_3A, ENCODER_3B, 360);
+RoveQuadEncoder EncoderAugerAxis(ENCODER_1A, ENCODER_1B, 360);
+RoveQuadEncoder EncoderAuger(ENCODER_2A, ENCODER_2B, 360);
+RoveQuadEncoder EncoderSpare(ENCODER_3A, ENCODER_3B, 360);
+RoveQuadEncoder EncoderSensorAxis(ENCODER_4A, ENCODER_4B, 360);
 
 // Joints
-RoveJoint ScoopAxis(&Motor2); 
-RoveJoint SensorAxis(&Motor3);
-#define Auger Motor4
-#define SpareMotor Motor1
+RoveJoint AugerAxis(&MotorAugerAxis); 
+RoveJoint SensorAxis(&MotorSensorAxis);
+#define Auger MotorAuger
+#define SpareMotor MotorSpare
 
 // Control variables
-int16_t ScoopAxisDecipercent = 0;
-int16_t SensorAxisDecipercent = 0;
-int16_t AugerDecipercent = 0;
-uint8_t GimbalPanPosition = (GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN;
-uint8_t GimbalTiltPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN;
+int16_t augerAxisDecipercent = 0;
+int16_t sensorAxisDecipercent = 0;
+int16_t augerDecipercent = 0;
+
+uint8_t gimbalPanStartPosition = (GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN;
+uint8_t gimbalTiltStartPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN;
 
 
 // Methods
