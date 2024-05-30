@@ -66,6 +66,9 @@ public:
     }
 };
 
+// Toggle Peltier Module
+uint8_t togglePeltier = 0;
+
 // Limit Switches
 LimitSwitch LimitSensorAxisRVS(LIMITSWITCH1);
 LimitSwitch LimitAugerAxisFWD(LIMITSWITCH2);

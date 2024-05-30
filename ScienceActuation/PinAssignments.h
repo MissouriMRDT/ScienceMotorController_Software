@@ -52,5 +52,8 @@
 #define TEMP    15
 #define HUMIDITY 16
 
+// Peltier Module
+#define PELTIER    27
+
 
 #endif

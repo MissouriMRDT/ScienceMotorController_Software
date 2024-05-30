@@ -12,6 +12,7 @@ void setup() {
     //pinMode(SW7, INPUT);
     //pinMode(SW8, INPUT);
     pinMode(DIR_SW, INPUT);
+    pinMode(PELTIER, OUTPUT);
 
     AugerAxis.attachEncoder(&EncoderAugerAxis);
     SensorAxis.attachEncoder(&EncoderSensorAxis);
@@ -139,6 +140,14 @@ void loop() {
             RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, humidity);
             break;
         }
+
+        case RC_SCIENCEACTUATIONBOARD_ENABLECOOLER_DATA_ID: //UPDATE
+        {
+            //Toggle peltier module
+            togglePeltier = *((uint8_t*) packet.data);
+
+            break;
+        }
     }
 
     bool direction = digitalRead(DIR_SW);
@@ -167,6 +176,13 @@ void loop() {
 
     GimbalPan.write();
     GimbalTilt.write();
+
+    //Toggle Peltier
+    if (togglePeltier == 0) {
+        digitalWrite(PELTIER, LOW);
+    } else {
+        digitalWrite(PELTIER, HIGH);
+    }
 }
 
 float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fromAnalog, float toAnalog) {
