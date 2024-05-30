@@ -136,7 +136,18 @@ void loop() {
         case RC_SCIENCEACTUATIONBOARD_REQUESTHUMIDITY_DATA_ID:
         {
             // humidity
-            float humidity = analogMap(analogRead(HUMIDITY), HUMIDITY_ADC_MIN, HUMIDITY_ADC_MAX, HUMIDITY_MAPPED_MIN, HUMIDITY_MAPPED_MAX);
+            // voltage divider: Vout = Vin ( R2 / (R1 + R2) )
+            // here, R1 and Vin are known, Vout is measured
+            // solving for resistance, R2 = (Vout * R1) / (Vin * (1 - Vout/Vin))
+            // because the teensy reads only 0-3.3 volts, we must also multiply by a 1023/3.3 conversion factor
+            int adcVoltage = analogRead(HUMIDITY);
+            const float VIN_CORRECTED = (float)DIVIDER_Voltage * 1023 / 3.3;
+            float resistance = ((float)adcVoltage * DIVIDER_RESISTANCE) / (VIN_CORRECTED * (1 - adcVoltage/VIN_CORRECTED));
+            // next, resistance needs to be mapped to humidity
+            // we don't have expensive lab equipment to test this empirically, so I looked at this research paper:
+            // https://www.researchgate.net/publication/305703453_Exploring_the_Relationship_between_Moisture_Content_and_Electrical_Resistivity_for_Sandy_and_Silty_Soils
+            // then I went on Desmos and pulled this function out of my arse. Very Scientific!
+            float humidity = 100 * pow((resistance + 80000) / 50000), -0.27);
             RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, humidity);
             break;
         }

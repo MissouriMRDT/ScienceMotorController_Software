@@ -28,8 +28,8 @@
 
 // Limit Swtich Pins
 #define LIMITSWITCH1    33 // Sensor Axis RVS
-#define LIMITSWITCH2    34 // Auger Axis FWD
-#define LIMITSWITCH3    36 // Sensor Axis FWD
+#define LIMITSWITCH2    34 // Sensor Axis FWD
+#define LIMITSWITCH3    36 // Auger Axis FWD
 #define LIMITSWITCH4    37 // Spare RVS
 #define LIMITSWITCH5    38 // Spare FWD
 #define LIMITSWITCH6    35 // Auger Axis RVS

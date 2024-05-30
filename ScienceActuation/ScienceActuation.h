@@ -20,10 +20,15 @@
 #define GIMBAL_PAN_MIN      40
 #define GIMBAL_PAN_MAX      180
 
-#define HUMIDITY_ADC_MIN        10
-#define HUMIDITY_ADC_MAX        972
-#define HUMIDITY_MAPPED_MIN     100.0
-#define HUMIDITY_MAPPED_MAX     0.0
+// 100 MOhms = min humidity
+// 80 kOhms = max humidity
+// 10k voltage divider
+#define DIVIDER_RESISTANCE      8200000
+#define DIVIDER_VOLTAGE         3.3
+#define HUMIDITY_ADC_MIN        972
+#define HUMIDITY_ADC_MAX        10
+#define HUMIDITY_MAPPED_MIN     0.0
+#define HUMIDITY_MAPPED_MAX     100.0
 
 // RoveComm declarations
 RoveCommEthernet RoveComm;
@@ -70,13 +75,12 @@ public:
 uint8_t togglePeltier = 0;
 
 // Limit Switches
-LimitSwitch LimitSensorAxisRVS(LIMITSWITCH1);
+LimitSwitch LimitAugerAxisRVS(LIMITSWITCH1);
 LimitSwitch LimitAugerAxisFWD(LIMITSWITCH2);
 LimitSwitch LimitSensorAxisFWD(LIMITSWITCH3);
 LimitSwitch LimitSpareRVS(LIMITSWITCH4);
 LimitSwitch LimitLaserFWD(LIMITSWITCH5); // LimitSpareFWD
-LimitSwitch LimitAugerAxisRVS(LIMITSWITCH6);
-
+LimitSwitch LimitSensorAxisRVS(LIMITSWITCH6);
 CompoundSwitch LimitSensorOrLaserFWD(LimitSensorAxisFWD, LimitLaserFWD);
 
 // Encoders
