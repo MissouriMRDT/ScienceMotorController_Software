@@ -124,7 +124,7 @@ void loop() {
             break;
         }
         //increment science pan and tilt gimbals by (-180, 180)
-        case RC_SCIENCEACTUATIONBOARD_SCIENCEGIMBALINCREMENT_DATA_ID:
+        case RC_SCIENCEACTUATIONBOARD_AUGERGIMBALINCREMENT_DATA_ID:
         {
             //Serial.write("moving Gimbal");
             int16_t* data = (int16_t*) packet.data;
@@ -141,13 +141,13 @@ void loop() {
             // solving for resistance, R2 = (Vout * R1) / (Vin * (1 - Vout/Vin))
             // because the teensy reads only 0-3.3 volts, we must also multiply by a 1023/3.3 conversion factor
             int adcVoltage = analogRead(HUMIDITY);
-            const float VIN_CORRECTED = (float)DIVIDER_Voltage * 1023 / 3.3;
+            const float VIN_CORRECTED = (float)DIVIDER_VOLTAGE * 1023 / 3.3;
             float resistance = ((float)adcVoltage * DIVIDER_RESISTANCE) / (VIN_CORRECTED * (1 - adcVoltage/VIN_CORRECTED));
             // next, resistance needs to be mapped to humidity
             // we don't have expensive lab equipment to test this empirically, so I looked at this research paper:
             // https://www.researchgate.net/publication/305703453_Exploring_the_Relationship_between_Moisture_Content_and_Electrical_Resistivity_for_Sandy_and_Silty_Soils
             // then I went on Desmos and pulled this function out of my arse. Very Scientific!
-            float humidity = 100 * pow((resistance + 80000) / 50000), -0.27);
+            float humidity = 100 * powf((resistance + 80000) / 600000, -0.27f) - 25;
             RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, humidity);
             break;
         }
