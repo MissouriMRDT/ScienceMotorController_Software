@@ -100,9 +100,8 @@ int16_t augerAxisDecipercent = 0;
 int16_t sensorAxisDecipercent = 0;
 int16_t augerDecipercent = 0;
 
-uint8_t gimbalPanStartPosition = (GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN;
-uint8_t gimbalTiltStartPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN;
-
+const uint8_t gimbalPanStartPosition = (GIMBAL_PAN_MAX-GIMBAL_PAN_MIN)/2+GIMBAL_PAN_MIN;
+const uint8_t gimbalTiltStartPosition = (GIMBAL_TILT_MAX-GIMBAL_TILT_MIN)/2+GIMBAL_TILT_MIN;
 
 // Methods
 float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fromAnalog, float toAnalog);

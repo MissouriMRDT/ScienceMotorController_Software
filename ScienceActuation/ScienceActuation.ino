@@ -147,7 +147,8 @@ void loop() {
             // we don't have expensive lab equipment to test this empirically, so I looked at this research paper:
             // https://www.researchgate.net/publication/305703453_Exploring_the_Relationship_between_Moisture_Content_and_Electrical_Resistivity_for_Sandy_and_Silty_Soils
             // then I went on Desmos and pulled this function out of my arse. Very Scientific!
-            float humidity = 100 * powf((resistance + 80000) / 600000, -0.27f) - 25;
+            //float humidity = 100 * powf((resistance + 80000) / 50000, -0.27f);
+            float humidity = 100 * powf((resistance + 80000) / 650000, -0.6f); // more convincing
             RoveComm.write(RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_ID, RC_SCIENCEACTUATIONBOARD_HUMIDITY_DATA_COUNT, humidity);
             break;
         }
